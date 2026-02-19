@@ -23,12 +23,25 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Lendly backend — NestJS API with Prisma, JWT auth, and Swagger.
 
 ## Project setup
 
 ```bash
 $ npm install
+$ cp .env.example .env   # edit .env with your DATABASE_URL and JWT secrets
+```
+
+Optional: run Postgres via Docker:
+
+```bash
+$ docker compose up -d
+```
+
+Then run migrations:
+
+```bash
+$ npx prisma migrate dev
 ```
 
 ## Compile and run the project

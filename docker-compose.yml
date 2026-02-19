@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: lendly-postgres
+    environment:
+      POSTGRES_USER: lendly
+      POSTGRES_PASSWORD: lendly
+      POSTGRES_DB: lendly
+    ports:
+      - "5432:5432"
+    volumes:
+      - lendly_pgdata:/var/lib/postgresql/data
+
+volumes:
+  lendly_pgdata:

@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  
+}
+
+enum ListingStatus {
+  ACTIVE
+  PAUSED
+  DELETED
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+  COMPLETED
+}
+
+enum PricingUnit {
+  HOUR
+  DAY
+  WEEK
+  MONTH
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  phone        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sessions     Session[]
+  listings     Listing[]
+  renterBookings Booking[] @relation("Renter")
+  ownerBookings  Booking[] @relation("Owner")
+
+  @@map("users")
+}
+
+model Session {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash String
+  revokedAt       DateTime?
+  userAgent       String?
+  ip              String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Listing {
+  id                 String    @id @default(uuid())
+  ownerId            String
+  owner              User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title              String
+  description        String
+  category           String
+  condition          String
+  city               String
+  lat                Float?
+  lng                Float?
+  status             ListingStatus @default(ACTIVE)
+  hourlyRate         Decimal?
+  dailyRate          Decimal?
+  weeklyRate         Decimal?
+  monthlyRate        Decimal?
+  images             Json
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  availabilityBlocks AvailabilityBlock[]
+  bookings           Booking[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([category])
+  @@index([city])
+  @@map("listings")
+}
+
+model AvailabilityBlock {
+  id        String   @id @default(uuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  startAt   DateTime
+  endAt     DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
+  @@index([startAt, endAt])
+  @@map("availability_blocks")
+}
+
+model Booking {
+  id         String        @id @default(uuid())
+  listingId  String
+  listing    Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  renterId   String
+  renter     User          @relation("Renter", fields: [renterId], references: [id], onDelete: Cascade)
+  ownerId    String
+  owner      User          @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  startAt    DateTime
+  endAt      DateTime
+  status     BookingStatus @default(PENDING)
+  pricingUnit PricingUnit
+  quantity   Int
+  unitRate   Decimal
+  subtotal   Decimal
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([listingId])
+  @@index([renterId])
+  @@index([ownerId])
+  @@index([status])
+  @@index([startAt, endAt])
+  @@map("bookings")
+}
