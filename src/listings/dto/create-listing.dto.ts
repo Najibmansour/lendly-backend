@@ -1,88 +1,48 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import {
-  IsArray,
-  IsNumber,
-  IsOptional,
-  IsString,
-  IsUrl,
-  Max,
-  MaxLength,
-  Min,
-  ArrayMaxSize,
-  ValidateIf,
-} from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsUrl, Min, MinLength } from 'class-validator';
 
 export class CreateListingDto {
   @ApiProperty({ example: 'Road bike' })
   @IsString()
-  @MaxLength(200)
+  @MinLength(5)
   title!: string;
 
   @ApiProperty({ example: 'Great condition road bike for weekend rides.' })
   @IsString()
-  @MaxLength(5000)
+  @MinLength(20)
   description!: string;
 
   @ApiProperty({ example: 'bikes' })
   @IsString()
-  @MaxLength(100)
+  @MinLength(2)
   category!: string;
-
-  @ApiProperty({ example: 'good' })
-  @IsString()
-  @MaxLength(100)
-  condition!: string;
 
   @ApiProperty({ example: 'Berlin' })
   @IsString()
-  @MaxLength(100)
+  @MinLength(2)
   city!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'https://example.com/image.jpg' })
   @IsOptional()
-  @IsNumber()
-  @Min(-90)
-  @Max(90)
-  lat?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNumber()
-  @Min(-180)
-  @Max(180)
-  lng?: number;
+  @IsString()
+  @IsUrl()
+  imageUrl?: string;
 
   @ApiPropertyOptional({ example: 10 })
   @IsOptional()
   @IsNumber()
-  @Min(0)
+  @Min(0.01)
   hourlyRate?: number;
 
   @ApiPropertyOptional({ example: 50 })
   @IsOptional()
   @IsNumber()
-  @Min(0)
+  @Min(0.01)
   dailyRate?: number;
 
-  @ApiPropertyOptional({ example: 200 })
+  @ApiPropertyOptional({ example: 280 })
   @IsOptional()
   @IsNumber()
-  @Min(0)
+  @Min(0.01)
   weeklyRate?: number;
-
-  @ApiPropertyOptional({ example: 600 })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  monthlyRate?: number;
-
-  @ApiProperty({ description: 'Array of image URLs (max 10)', type: [String], example: ['https://example.com/1.jpg'] })
-  @IsArray()
-  @ArrayMaxSize(10)
-  @IsUrl({}, { each: true })
-  @IsString({ each: true })
-  @Type(() => String)
-  images!: string[];
-
 }

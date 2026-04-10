@@ -1,19 +1,16 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, MaxLength, Matches } from 'class-validator';
+import { IsString, IsOptional, MinLength } from 'class-validator';
 
 export class UpdateMeDto {
-  @ApiPropertyOptional({ example: 'Jane Doe' })
+  @ApiPropertyOptional({ example: 'John' })
   @IsOptional()
   @IsString()
-  @MaxLength(200)
-  name?: string;
+  @MinLength(2)
+  firstName?: string;
 
-  @ApiPropertyOptional({ example: '+1234567890' })
+  @ApiPropertyOptional({ example: 'Doe' })
   @IsOptional()
   @IsString()
-  @MaxLength(50)
-  @Matches(/^[\d\s\-\+\(\)]+$/, {
-    message: 'phone must contain only digits, spaces, +, -, (, )',
-  })
-  phone?: string;
+  @MinLength(2)
+  lastName?: string;
 }

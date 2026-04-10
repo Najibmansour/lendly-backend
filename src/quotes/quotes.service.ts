@@ -41,7 +41,6 @@ export class QuotesService {
           hourlyRate: listing.hourlyRate,
           dailyRate: listing.dailyRate,
           weeklyRate: listing.weeklyRate,
-          monthlyRate: listing.monthlyRate,
         },
         unitPref,
       );

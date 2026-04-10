@@ -12,10 +12,9 @@ function minAvailableRate(listing: {
   hourlyRate: unknown;
   dailyRate: unknown;
   weeklyRate: unknown;
-  monthlyRate: unknown;
 }): number | null {
   const toN = (v: unknown) => (v != null ? Number(v) : NaN);
-  const nums = [toN(listing.hourlyRate), toN(listing.dailyRate), toN(listing.weeklyRate), toN(listing.monthlyRate)].filter((n) => !Number.isNaN(n) && n >= 0);
+  const nums = [toN(listing.hourlyRate), toN(listing.dailyRate), toN(listing.weeklyRate)].filter((n) => !Number.isNaN(n) && n >= 0);
   return nums.length > 0 ? Math.min(...nums) : null;
 }
 
@@ -27,10 +26,9 @@ export class ListingsService {
     const hasRate =
       dto.hourlyRate != null ||
       dto.dailyRate != null ||
-      dto.weeklyRate != null ||
-      dto.monthlyRate != null;
+      dto.weeklyRate != null;
     if (!hasRate) {
-      throw new BadRequestException('Listing must have at least one rate set (hourly, daily, weekly, or monthly)');
+      throw new BadRequestException('Listing must have at least one rate set (hourly, daily, or weekly)');
     }
 
     return this.prisma.listing.create({
@@ -39,15 +37,11 @@ export class ListingsService {
         title: dto.title,
         description: dto.description,
         category: dto.category,
-        condition: dto.condition,
         city: dto.city,
-        lat: dto.lat,
-        lng: dto.lng,
+        imageUrl: dto.imageUrl,
         hourlyRate: toDecimalOrUndefined(dto.hourlyRate),
         dailyRate: toDecimalOrUndefined(dto.dailyRate),
         weeklyRate: toDecimalOrUndefined(dto.weeklyRate),
-        monthlyRate: toDecimalOrUndefined(dto.monthlyRate),
-        images: dto.images as unknown as Prisma.InputJsonValue,
       },
     });
   }
@@ -55,7 +49,7 @@ export class ListingsService {
   async findOne(id: string) {
     const listing = await this.prisma.listing.findUnique({
       where: { id },
-      include: { owner: { select: { id: true, name: true } } },
+      include: { owner: { select: { id: true, firstName: true, lastName: true } } },
     });
     if (!listing) {
       throw new NotFoundException('Listing not found');
@@ -84,27 +78,30 @@ export class ListingsService {
           orderBy: { createdAt: 'desc' },
           skip: (page - 1) * limit,
           take: limit,
-          include: { owner: { select: { id: true, name: true } } },
+          include: { owner: { select: { id: true, firstName: true, lastName: true } } },
         }),
         this.prisma.listing.count({ where }),
       ]);
       return { items, total, page, limit };
     }
 
-    // sort=price: fetch up to PRICE_SORT_FETCH_LIMIT, compute minAvailableRate in memory, sort, then paginate
-    const all = await this.prisma.listing.findMany({
-      where,
-      take: PRICE_SORT_FETCH_LIMIT,
-      include: { owner: { select: { id: true, name: true } } },
-    });
-    const withMinRate = all
-      .map((l) => ({ listing: l, minRate: minAvailableRate(l) }))
-      .filter((x) => x.minRate != null) as { listing: (typeof all)[0]; minRate: number }[];
-    withMinRate.sort((a, b) => a.minRate - b.minRate);
-    const total = withMinRate.length;
-    const start = (page - 1) * limit;
-    const items = withMinRate.slice(start, start + limit).map((x) => x.listing);
-    return { items, total, page, limit };
+    if (sort === 'price') {
+      const all = await this.prisma.listing.findMany({
+        where,
+        take: PRICE_SORT_FETCH_LIMIT,
+        include: { owner: { select: { id: true, firstName: true, lastName: true } } },
+      });
+      const withMinRate = all
+        .map((l) => ({ listing: l, minRate: minAvailableRate(l) }))
+        .filter((x) => x.minRate != null) as { listing: (typeof all)[0]; minRate: number }[];
+      withMinRate.sort((a, b) => a.minRate - b.minRate);
+      const total = withMinRate.length;
+      const start = (page - 1) * limit;
+      const items = withMinRate.slice(start, start + limit).map((x) => x.listing);
+      return { items, total, page, limit };
+    }
+
+    throw new BadRequestException('Invalid sort parameter');
   }
 
   async update(id: string, dto: UpdateListingDto) {
@@ -112,16 +109,11 @@ export class ListingsService {
     if (dto.title !== undefined) data.title = dto.title;
     if (dto.description !== undefined) data.description = dto.description;
     if (dto.category !== undefined) data.category = dto.category;
-    if (dto.condition !== undefined) data.condition = dto.condition;
     if (dto.city !== undefined) data.city = dto.city;
-    if (dto.lat !== undefined) data.lat = dto.lat;
-    if (dto.lng !== undefined) data.lng = dto.lng;
-    if (dto.status !== undefined) data.status = dto.status;
+    if (dto.imageUrl !== undefined) data.imageUrl = dto.imageUrl;
     if (dto.hourlyRate !== undefined) data.hourlyRate = toDecimalOrUndefined(dto.hourlyRate);
     if (dto.dailyRate !== undefined) data.dailyRate = toDecimalOrUndefined(dto.dailyRate);
     if (dto.weeklyRate !== undefined) data.weeklyRate = toDecimalOrUndefined(dto.weeklyRate);
-    if (dto.monthlyRate !== undefined) data.monthlyRate = toDecimalOrUndefined(dto.monthlyRate);
-    if (dto.images !== undefined) data.images = dto.images as unknown as Prisma.InputJsonValue;
 
     return this.prisma.listing.update({
       where: { id },

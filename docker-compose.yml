@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:latest
     container_name: lendly-postgres
     environment:
       POSTGRES_USER: lendly
@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - lendly_pgdata:/var/lib/postgresql/data
+      - lendly_pgdata:/var/lib/postgresql
 
 volumes:
   lendly_pgdata:

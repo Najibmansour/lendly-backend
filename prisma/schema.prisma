@@ -32,7 +32,8 @@ model User {
   id           String    @id @default(uuid())
   email        String    @unique
   passwordHash String
-  name         String
+  firstName    String
+  lastName     String
   phone        String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -66,16 +67,12 @@ model Listing {
   title              String
   description        String
   category           String
-  condition          String
   city               String
-  lat                Float?
-  lng                Float?
-  status             ListingStatus @default(ACTIVE)
+  imageUrl           String?
   hourlyRate         Decimal?
   dailyRate          Decimal?
   weeklyRate         Decimal?
-  monthlyRate        Decimal?
-  images             Json
+  status             ListingStatus @default(ACTIVE)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   availabilityBlocks AvailabilityBlock[]

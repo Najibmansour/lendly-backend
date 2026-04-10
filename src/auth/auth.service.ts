@@ -39,7 +39,8 @@ export class AuthService {
       data: {
         email: dto.email.toLowerCase(),
         passwordHash,
-        name: dto.name,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
       },
     });
     return this.createSession(user.id, user.email);
@@ -96,7 +97,8 @@ export class AuthService {
       select: {
         id: true,
         email: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         phone: true,
         createdAt: true,
         updatedAt: true,

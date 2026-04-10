@@ -1,99 +1,52 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import {
-  IsArray,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-  IsUrl,
-  Max,
-  MaxLength,
-  Min,
-  ArrayMaxSize,
-} from 'class-validator';
-import { ListingStatus } from '@prisma/client';
+import { IsNumber, IsOptional, IsString, IsUrl, Min, MinLength } from 'class-validator';
 
 export class UpdateListingDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'Road bike' })
   @IsOptional()
   @IsString()
-  @MaxLength(200)
+  @MinLength(5)
   title?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'Great condition road bike for weekend rides.' })
   @IsOptional()
   @IsString()
-  @MaxLength(5000)
+  @MinLength(20)
   description?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'bikes' })
   @IsOptional()
   @IsString()
-  @MaxLength(100)
+  @MinLength(2)
   category?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'Berlin' })
   @IsOptional()
   @IsString()
-  @MaxLength(100)
-  condition?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
+  @MinLength(2)
   city?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'https://example.com/image.jpg' })
+  @IsOptional()
+  @IsString()
+  @IsUrl()
+  imageUrl?: string;
+
+  @ApiPropertyOptional({ example: 10 })
   @IsOptional()
   @IsNumber()
-  @Min(-90)
-  @Max(90)
-  lat?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNumber()
-  @Min(-180)
-  @Max(180)
-  lng?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsEnum(ListingStatus)
-  status?: ListingStatus;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
+  @Min(0.01)
   hourlyRate?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 50 })
   @IsOptional()
   @IsNumber()
-  @Min(0)
+  @Min(0.01)
   dailyRate?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 280 })
   @IsOptional()
   @IsNumber()
-  @Min(0)
+  @Min(0.01)
   weeklyRate?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  monthlyRate?: number;
-
-  @ApiPropertyOptional({ type: [String] })
-  @IsOptional()
-  @IsArray()
-  @ArrayMaxSize(10)
-  @IsUrl({}, { each: true })
-  @IsString({ each: true })
-  @Type(() => String)
-  images?: string[];
 }

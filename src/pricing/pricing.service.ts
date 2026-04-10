@@ -21,7 +21,6 @@ export class PricingService {
       hourlyRate: unknown;
       dailyRate: unknown;
       weeklyRate: unknown;
-      monthlyRate: unknown;
     },
     unitPreference?: UnitPreference,
   ): QuoteResult {
@@ -34,7 +33,6 @@ export class PricingService {
     const hourlyRate = toNum(rates.hourlyRate);
     const dailyRate = toNum(rates.dailyRate);
     const weeklyRate = toNum(rates.weeklyRate);
-    const monthlyRate = toNum(rates.monthlyRate);
 
     const candidates: { unit: PricingUnit; quantity: number; unitRate: number; subtotal: number }[] = [];
 
@@ -60,14 +58,6 @@ export class PricingService {
         quantity: Math.ceil(durationDays / DAYS_PER_WEEK),
         unitRate: weeklyRate,
         subtotal: Math.ceil(durationDays / DAYS_PER_WEEK) * weeklyRate,
-      });
-    }
-    if (monthlyRate != null && monthlyRate > 0) {
-      candidates.push({
-        unit: 'MONTH',
-        quantity: Math.ceil(durationDays / DAYS_PER_MONTH),
-        unitRate: monthlyRate,
-        subtotal: Math.ceil(durationDays / DAYS_PER_MONTH) * monthlyRate,
       });
     }
 

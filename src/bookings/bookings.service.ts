@@ -51,7 +51,6 @@ export class BookingsService {
         hourlyRate: listing.hourlyRate,
         dailyRate: listing.dailyRate,
         weeklyRate: listing.weeklyRate,
-        monthlyRate: listing.monthlyRate,
       },
       unitPref,
     );
@@ -71,8 +70,8 @@ export class BookingsService {
       },
       include: {
         listing: { select: { id: true, title: true } },
-        owner: { select: { id: true, name: true } },
-        renter: { select: { id: true, name: true } },
+        owner: { select: { id: true, firstName: true, lastName: true } },
+        renter: { select: { id: true, firstName: true, lastName: true } },
       },
     });
   }
@@ -86,8 +85,8 @@ export class BookingsService {
       orderBy: { createdAt: 'desc' },
       include: {
         listing: { select: { id: true, title: true, city: true } },
-        owner: { select: { id: true, name: true } },
-        renter: { select: { id: true, name: true } },
+        owner: { select: { id: true, firstName: true, lastName: true } },
+        renter: { select: { id: true, firstName: true, lastName: true } },
       },
     });
   }
@@ -97,8 +96,8 @@ export class BookingsService {
       where: { id },
       include: {
         listing: true,
-        owner: { select: { id: true, name: true, phone: true } },
-        renter: { select: { id: true, name: true, phone: true } },
+        owner: { select: { id: true, firstName: true, lastName: true, phone: true } },
+        renter: { select: { id: true, firstName: true, lastName: true, phone: true } },
       },
     });
     if (!booking) {
@@ -139,8 +138,8 @@ export class BookingsService {
         data: { status: BookingStatus.ACCEPTED },
         include: {
           listing: { select: { id: true, title: true } },
-          owner: { select: { id: true, name: true } },
-          renter: { select: { id: true, name: true } },
+          owner: { select: { id: true, firstName: true, lastName: true } },
+          renter: { select: { id: true, firstName: true, lastName: true } },
         },
       });
     });
@@ -164,8 +163,8 @@ export class BookingsService {
       data: { status: BookingStatus.DECLINED },
       include: {
         listing: { select: { id: true, title: true } },
-        owner: { select: { id: true, name: true } },
-        renter: { select: { id: true, name: true } },
+        owner: { select: { id: true, firstName: true, lastName: true } },
+        renter: { select: { id: true, firstName: true, lastName: true } },
       },
     });
   }
@@ -188,8 +187,8 @@ export class BookingsService {
       data: { status: BookingStatus.CANCELLED },
       include: {
         listing: { select: { id: true, title: true } },
-        owner: { select: { id: true, name: true } },
-        renter: { select: { id: true, name: true } },
+        owner: { select: { id: true, firstName: true, lastName: true } },
+        renter: { select: { id: true, firstName: true, lastName: true } },
       },
     });
   }

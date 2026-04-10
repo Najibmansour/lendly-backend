@@ -10,14 +10,14 @@ export class UsersService {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        ...(dto.name !== undefined && { name: dto.name }),
-        ...(dto.phone !== undefined && { phone: dto.phone }),
+        ...(dto.firstName !== undefined && { firstName: dto.firstName }),
+        ...(dto.lastName !== undefined && { lastName: dto.lastName }),
       },
       select: {
         id: true,
         email: true,
-        name: true,
-        phone: true,
+        firstName: true,
+        lastName: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -30,7 +30,8 @@ export class UsersService {
       where: { id },
       select: {
         id: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         createdAt: true,
       },
     });
