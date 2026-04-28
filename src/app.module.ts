@@ -8,6 +8,7 @@ import { ListingsModule } from './listings/listings.module';
 import { PricingModule } from './pricing/pricing.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { QuotesModule } from './quotes/quotes.module';
+import { UploadModule } from './upload/upload.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -20,6 +21,7 @@ import { UsersModule } from './users/users.module';
     ListingsModule,
     QuotesModule,
     BookingsModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],
