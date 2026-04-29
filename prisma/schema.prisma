@@ -67,7 +67,13 @@ model Listing {
   title              String
   description        String
   category           String
-  city               String
+  city               String?
+  latitude           Float
+  longitude          Float
+  address            String
+  condition          String?
+  tags               String[]
+  images             String[]
   imageUrl           String?
   hourlyRate         Decimal?
   dailyRate          Decimal?

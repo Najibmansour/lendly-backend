@@ -22,6 +22,14 @@ function minAvailableRate(listing: {
 export class ListingsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private mapListingLocation(listing: any) {
+    const { latitude, longitude, address, ...rest } = listing;
+    return {
+      ...rest,
+      location: { latitude, longitude, address },
+    };
+  }
+
   async create(ownerId: string, dto: CreateListingDto) {
     const hasRate =
       dto.hourlyRate != null ||
@@ -31,19 +39,35 @@ export class ListingsService {
       throw new BadRequestException('Listing must have at least one rate set (hourly, daily, or weekly)');
     }
 
-    return this.prisma.listing.create({
-      data: {
-        ownerId,
-        title: dto.title,
-        description: dto.description,
-        category: dto.category,
-        city: dto.city,
-        imageUrl: dto.imageUrl,
-        hourlyRate: toDecimalOrUndefined(dto.hourlyRate),
-        dailyRate: toDecimalOrUndefined(dto.dailyRate),
-        weeklyRate: toDecimalOrUndefined(dto.weeklyRate),
-      },
-    });
+    if (dto.latitude == null || dto.longitude == null) {
+      throw new BadRequestException('Listing must include latitude and longitude');
+    }
+
+    if (!dto.images?.length) {
+      throw new BadRequestException('Listing must include at least one image');
+    }
+
+    const createData: any = {
+      ownerId,
+      title: dto.title,
+      description: dto.description,
+      category: dto.category,
+      city: dto.city,
+      latitude: dto.latitude,
+      longitude: dto.longitude,
+      address: dto.address,
+      condition: dto.condition,
+      tags: dto.tags ?? [],
+      images: dto.images,
+      imageUrl: dto.imageUrl ?? dto.images[0],
+      hourlyRate: toDecimalOrUndefined(dto.hourlyRate),
+      dailyRate: toDecimalOrUndefined(dto.dailyRate),
+      weeklyRate: toDecimalOrUndefined(dto.weeklyRate),
+    };
+
+    const listing = await this.prisma.listing.create({ data: createData });
+
+    return this.mapListingLocation(listing);
   }
 
   async findOne(id: string) {
@@ -54,7 +78,7 @@ export class ListingsService {
     if (!listing) {
       throw new NotFoundException('Listing not found');
     }
-    return listing;
+    return this.mapListingLocation(listing);
   }
 
   async findAll(query: ListListingsQueryDto) {
@@ -82,7 +106,7 @@ export class ListingsService {
         }),
         this.prisma.listing.count({ where }),
       ]);
-      return { items, total, page, limit };
+      return { items: items.map((listing) => this.mapListingLocation(listing)), total, page, limit };
     }
 
     if (sort === 'price') {
@@ -98,27 +122,46 @@ export class ListingsService {
       const total = withMinRate.length;
       const start = (page - 1) * limit;
       const items = withMinRate.slice(start, start + limit).map((x) => x.listing);
-      return { items, total, page, limit };
+      return { items: items.map((listing) => this.mapListingLocation(listing)), total, page, limit };
     }
 
     throw new BadRequestException('Invalid sort parameter');
   }
 
+  async findNearby(lat: number, lng: number) {
+    const listings = await this.prisma.listing.findMany({
+      where: { status: { not: ListingStatus.DELETED } },
+      include: { owner: { select: { id: true, firstName: true, lastName: true } } },
+    });
+    return listings.map((listing) => this.mapListingLocation(listing));
+  }
+
   async update(id: string, dto: UpdateListingDto) {
-    const data: Prisma.ListingUpdateInput = {};
+    const data: any = {};
     if (dto.title !== undefined) data.title = dto.title;
     if (dto.description !== undefined) data.description = dto.description;
     if (dto.category !== undefined) data.category = dto.category;
     if (dto.city !== undefined) data.city = dto.city;
+    if (dto.latitude !== undefined) data.latitude = dto.latitude;
+    if (dto.longitude !== undefined) data.longitude = dto.longitude;
+    if (dto.address !== undefined) data.address = dto.address;
+    if (dto.condition !== undefined) data.condition = dto.condition;
+    if (dto.tags !== undefined) data.tags = dto.tags;
+    if (dto.images !== undefined) {
+      data.images = dto.images;
+      data.imageUrl = dto.images.length > 0 ? dto.images[0] : null;
+    }
     if (dto.imageUrl !== undefined) data.imageUrl = dto.imageUrl;
     if (dto.hourlyRate !== undefined) data.hourlyRate = toDecimalOrUndefined(dto.hourlyRate);
     if (dto.dailyRate !== undefined) data.dailyRate = toDecimalOrUndefined(dto.dailyRate);
     if (dto.weeklyRate !== undefined) data.weeklyRate = toDecimalOrUndefined(dto.weeklyRate);
 
-    return this.prisma.listing.update({
+    const listing = await this.prisma.listing.update({
       where: { id },
       data,
     });
+
+    return this.mapListingLocation(listing);
   }
 
   async softDelete(id: string) {

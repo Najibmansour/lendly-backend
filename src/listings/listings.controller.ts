@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   UseGuards,
+  ParseFloatPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -79,6 +80,15 @@ export class ListingsController {
     @CurrentUser() user: JwtUser,
   ) {
     return this.availability.deleteBlock(id, blockId, user.id);
+  }
+
+  @Get('nearby')
+  @ApiOperation({ summary: 'List nearby listings (future radius filtering)' })
+  findNearby(
+    @Query('lat', ParseFloatPipe) lat: number,
+    @Query('lng', ParseFloatPipe) lng: number,
+  ) {
+    return this.listings.findNearby(lat, lng);
   }
 
   @Get(':id')
