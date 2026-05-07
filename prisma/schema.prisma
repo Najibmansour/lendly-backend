@@ -15,7 +15,7 @@ enum ListingStatus {
 
 enum BookingStatus {
   PENDING
-  ACCEPTED
+  CONFIRMED
   DECLINED
   CANCELLED
   COMPLETED
@@ -48,6 +48,7 @@ model User {
   listings     Listing[]
   renterBookings Booking[] @relation("Renter")
   ownerBookings  Booking[] @relation("Owner")
+  bookingIssues  BookingIssue[]
 
   @@map("users")
 }
@@ -127,12 +128,15 @@ model Booking {
   paymentStatus    PaymentStatus @default(UNPAID)
   depositAmount    Decimal?
   paymentReference String?
+  renterConfirmedAt DateTime?
+  ownerConfirmedAt  DateTime?
   pricingUnit      PricingUnit
   quantity         Int
   unitRate         Decimal
   subtotal         Decimal
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
+  issues           BookingIssue[]
 
   @@index([listingId])
   @@index([renterId])
@@ -140,4 +144,20 @@ model Booking {
   @@index([status])
   @@index([startAt, endAt])
   @@map("bookings")
+}
+
+model BookingIssue {
+  id        String   @id @default(uuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  message   String
+  category  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bookingId, createdAt])
+  @@index([authorId])
+  @@map("booking_issues")
 }

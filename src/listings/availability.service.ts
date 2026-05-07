@@ -38,7 +38,7 @@ export class AvailabilityService {
       throw new BadRequestException('startAt must be before endAt');
     }
 
-    const [blocks, acceptedBookings] = await Promise.all([
+    const [blocks, confirmedBookings] = await Promise.all([
       this.prisma.availabilityBlock.findMany({
         where: { listingId },
         orderBy: { startAt: 'asc' },
@@ -46,20 +46,20 @@ export class AvailabilityService {
       this.prisma.booking.findMany({
         where: {
           listingId,
-          status: BookingStatus.ACCEPTED,
+          status: BookingStatus.CONFIRMED,
         },
         orderBy: { startAt: 'asc' },
       }),
     ]);
 
-    const calendarDays = this.buildCalendarDays(startAt, endAt, blocks, acceptedBookings);
+    const calendarDays = this.buildCalendarDays(startAt, endAt, blocks, confirmedBookings);
 
     return {
       listingId,
       startAt,
       endAt,
       unavailableBlocks: blocks,
-      acceptedBookings,
+      confirmedBookings,
       calendar: calendarDays,
     };
   }

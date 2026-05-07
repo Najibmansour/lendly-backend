@@ -18,6 +18,8 @@ import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingsQueryDto } from './dto/list-bookings-query.dto';
 import { UpdateBookingPaymentDto } from './dto/update-booking-payment.dto';
+import { CompleteBookingDto } from './dto/complete-booking.dto';
+import { CreateBookingIssueDto } from './dto/create-booking-issue.dto';
 
 @ApiTags('bookings')
 @Controller('v1/bookings')
@@ -78,5 +80,34 @@ export class BookingsController {
   @ApiOperation({ summary: 'Cancel booking (renter only)' })
   cancel(@Param('id') id: string, @CurrentUser() user: JwtUser) {
     return this.bookings.cancel(id, user.id);
+  }
+
+  @Post(':id/complete')
+  @UseGuards(BookingParticipantGuard)
+  @ApiOperation({ summary: 'Mark booking completion as renter or owner' })
+  complete(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtUser,
+    @Body() dto: CompleteBookingDto,
+  ) {
+    return this.bookings.completeBooking(id, user.id, dto);
+  }
+
+  @Post(':id/issues')
+  @UseGuards(BookingParticipantGuard)
+  @ApiOperation({ summary: 'Create booking issue report (participant only)' })
+  createIssue(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtUser,
+    @Body() dto: CreateBookingIssueDto,
+  ) {
+    return this.bookings.createBookingIssue(id, user.id, dto);
+  }
+
+  @Get(':id/issues')
+  @UseGuards(BookingParticipantGuard)
+  @ApiOperation({ summary: 'List booking issues (participant only)' })
+  getIssues(@Param('id') id: string, @CurrentUser() user: JwtUser) {
+    return this.bookings.getBookingIssues(id, user.id);
   }
 }
