@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Two ranges overlap iff (startA < endB) AND (endA > startB) */
@@ -26,6 +27,73 @@ export class AvailabilityService {
       where: { listingId },
       orderBy: { startAt: 'asc' },
     });
+  }
+
+  async getCalendar(listingId: string, startAt: Date, endAt: Date) {
+    await this.ensureListingExists(listingId);
+    if (!this.isValidDate(startAt) || !this.isValidDate(endAt)) {
+      throw new BadRequestException('startAt and endAt must be valid dates');
+    }
+    if (startAt >= endAt) {
+      throw new BadRequestException('startAt must be before endAt');
+    }
+
+    const [blocks, acceptedBookings] = await Promise.all([
+      this.prisma.availabilityBlock.findMany({
+        where: { listingId },
+        orderBy: { startAt: 'asc' },
+      }),
+      this.prisma.booking.findMany({
+        where: {
+          listingId,
+          status: BookingStatus.ACCEPTED,
+        },
+        orderBy: { startAt: 'asc' },
+      }),
+    ]);
+
+    const calendarDays = this.buildCalendarDays(startAt, endAt, blocks, acceptedBookings);
+
+    return {
+      listingId,
+      startAt,
+      endAt,
+      unavailableBlocks: blocks,
+      acceptedBookings,
+      calendar: calendarDays,
+    };
+  }
+
+  private buildCalendarDays(
+    startAt: Date,
+    endAt: Date,
+    blocks: Array<{ startAt: Date; endAt: Date }>,
+    bookings: Array<{ startAt: Date; endAt: Date }>,
+  ) {
+    const normalizedStart = this.normalizeDate(startAt);
+    const normalizedEnd = this.normalizeDate(new Date(endAt.getTime() - 1));
+    const days: Array<{ date: string; available: boolean }> = [];
+    let current = new Date(normalizedStart);
+    while (current <= normalizedEnd) {
+      const dayStart = new Date(current);
+      const dayEnd = new Date(current.getTime() + 24 * 60 * 60 * 1000);
+      const isUnavailable = blocks.some((block) => overlaps(dayStart, dayEnd, block.startAt, block.endAt))
+        || bookings.some((booking) => overlaps(dayStart, dayEnd, booking.startAt, booking.endAt));
+      days.push({
+        date: dayStart.toISOString().slice(0, 10),
+        available: !isUnavailable,
+      });
+      current = new Date(current.getTime() + 24 * 60 * 60 * 1000);
+    }
+    return days;
+  }
+
+  private isValidDate(date: Date) {
+    return !Number.isNaN(date.getTime());
+  }
+
+  private normalizeDate(date: Date) {
+    return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   }
 
   async createBlock(

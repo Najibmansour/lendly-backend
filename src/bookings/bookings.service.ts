@@ -11,6 +11,9 @@ import { UnitPreference } from '../pricing/pricing.types';
 import { toDecimal } from '../common/decimal.util';
 import { CreateBookingDto } from './dto/create-booking.dto';
 
+const PAYMENT_STATUS_VALUES = ['UNPAID', 'HOLD', 'PAID', 'FAILED'] as const;
+type PaymentStatusValue = (typeof PAYMENT_STATUS_VALUES)[number];
+
 function overlaps(startA: Date, endA: Date, startB: Date, endB: Date): boolean {
   return startA < endB && endA > startB;
 }
@@ -23,8 +26,8 @@ export class BookingsService {
   ) {}
 
   async create(renterId: string, dto: CreateBookingDto) {
-    const startAt = new Date(dto.startAt);
-    const endAt = new Date(dto.endAt);
+    const startAt = this.parseDateOrThrow(dto.startAt, 'startAt');
+    const endAt = this.parseDateOrThrow(dto.endAt, 'endAt');
     if (startAt >= endAt) {
       throw new BadRequestException('startAt must be before endAt');
     }
@@ -55,6 +58,7 @@ export class BookingsService {
       unitPref,
     );
 
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     return this.prisma.booking.create({
       data: {
         listingId: listing.id,
@@ -62,7 +66,9 @@ export class BookingsService {
         ownerId: listing.ownerId,
         startAt,
         endAt,
+        expiresAt,
         status: BookingStatus.PENDING,
+        paymentStatus: 'UNPAID' as PaymentStatusValue,
         pricingUnit: quote.chosenUnit,
         quantity: quote.quantity,
         unitRate: toDecimal(quote.unitRate),
@@ -121,8 +127,13 @@ export class BookingsService {
       if (booking.ownerId !== ownerId) {
         throw new ForbiddenException('Only the listing owner can accept');
       }
+      this.assertPendingBookingNotExpired(booking);
       if (booking.status !== BookingStatus.PENDING) {
         throw new BadRequestException('Only PENDING bookings can be accepted');
+      }
+      const paymentStatus = (booking as any).paymentStatus as PaymentStatusValue | undefined;
+      if (paymentStatus === 'UNPAID' || paymentStatus === 'FAILED') {
+        throw new BadRequestException('Booking payment must be on hold or paid before acceptance');
       }
 
       await this.checkAvailabilityTx(
@@ -155,6 +166,7 @@ export class BookingsService {
     if (booking.ownerId !== ownerId) {
       throw new ForbiddenException('Only the listing owner can decline');
     }
+    this.assertPendingBookingNotExpired(booking);
     if (booking.status !== BookingStatus.PENDING) {
       throw new BadRequestException('Only PENDING bookings can be declined');
     }
@@ -179,6 +191,9 @@ export class BookingsService {
     if (booking.renterId !== renterId) {
       throw new ForbiddenException('Only the renter can cancel');
     }
+    if (booking.status === BookingStatus.PENDING) {
+      this.assertPendingBookingNotExpired(booking);
+    }
     if (booking.status !== BookingStatus.PENDING && booking.status !== BookingStatus.ACCEPTED) {
       throw new BadRequestException('Only PENDING or ACCEPTED bookings can be cancelled');
     }
@@ -191,6 +206,64 @@ export class BookingsService {
         renter: { select: { id: true, firstName: true, lastName: true } },
       },
     });
+  }
+
+  async updatePayment(id: string, renterId: string, dto: { paymentStatus?: PaymentStatusValue; depositAmount?: number; paymentReference?: string }) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id },
+    });
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+    if (booking.renterId !== renterId) {
+      throw new ForbiddenException('Only the renter can update payment information');
+    }
+    if (booking.status !== BookingStatus.PENDING) {
+      throw new BadRequestException('Only PENDING bookings can update payment information');
+    }
+    this.assertPendingBookingNotExpired(booking);
+
+    const data: any = {};
+    if (dto.paymentStatus) {
+      data.paymentStatus = dto.paymentStatus;
+    }
+    if (dto.depositAmount !== undefined) {
+      data.depositAmount = toDecimal(dto.depositAmount);
+    }
+    if (dto.paymentReference !== undefined) {
+      data.paymentReference = dto.paymentReference;
+    }
+    if (!Object.keys(data).length) {
+      throw new BadRequestException('No payment update fields provided');
+    }
+
+    return this.prisma.booking.update({
+      where: { id },
+      data,
+      include: {
+        listing: { select: { id: true, title: true } },
+        owner: { select: { id: true, firstName: true, lastName: true } },
+        renter: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
+  }
+
+  private assertPendingBookingNotExpired(booking: { status: BookingStatus; expiresAt?: Date | null }) {
+    if (
+      booking.status === BookingStatus.PENDING &&
+      booking.expiresAt &&
+      booking.expiresAt.getTime() < Date.now()
+    ) {
+      throw new BadRequestException('Booking has expired and is no longer actionable');
+    }
+  }
+
+  private parseDateOrThrow(value: string, fieldName: string): Date {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      throw new BadRequestException(`${fieldName} is not a valid ISO date string`);
+    }
+    return date;
   }
 
   private async checkAvailability(

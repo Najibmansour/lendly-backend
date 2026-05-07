@@ -17,6 +17,7 @@ import { BookingParticipantGuard } from './guards/booking-participant.guard';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ListBookingsQueryDto } from './dto/list-bookings-query.dto';
+import { UpdateBookingPaymentDto } from './dto/update-booking-payment.dto';
 
 @ApiTags('bookings')
 @Controller('v1/bookings')
@@ -29,6 +30,17 @@ export class BookingsController {
   @ApiOperation({ summary: 'Create a booking (JWT)' })
   create(@CurrentUser() user: JwtUser, @Body() dto: CreateBookingDto) {
     return this.bookings.create(user.id, dto);
+  }
+
+  @Post(':id/payment')
+  @UseGuards(BookingRenterGuard)
+  @ApiOperation({ summary: 'Update booking payment/hold info (renter only)' })
+  updatePayment(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtUser,
+    @Body() dto: UpdateBookingPaymentDto,
+  ) {
+    return this.bookings.updatePayment(id, user.id, dto);
   }
 
   @Get()

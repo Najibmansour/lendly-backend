@@ -20,6 +20,7 @@ import { AvailabilityService } from './availability.service';
 import { CreateListingDto } from './dto/create-listing.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
 import { ListListingsQueryDto } from './dto/list-listings-query.dto';
+import { AvailabilityCalendarQueryDto } from './dto/availability-calendar-query.dto';
 import { CreateAvailabilityBlockDto } from './dto/create-availability-block.dto';
 
 @ApiTags('listings')
@@ -44,6 +45,15 @@ export class ListingsController {
   })
   findAll(@Query() query: ListListingsQueryDto) {
     return this.listings.findAll(query);
+  }
+
+  @Get(':id/availability/calendar')
+  @ApiOperation({ summary: 'Get daily availability calendar for a listing' })
+  getAvailabilityCalendar(
+    @Param('id') id: string,
+    @Query() query: AvailabilityCalendarQueryDto,
+  ) {
+    return this.availability.getCalendar(id, new Date(query.startAt), new Date(query.endAt));
   }
 
   @Get(':id/availability')
