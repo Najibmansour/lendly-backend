@@ -1,9 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  S3Client,
-  PutObjectCommand,
-} from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { FileType } from './dto/generate-upload-url.dto';
 
@@ -15,13 +12,17 @@ export class UploadService {
 
   constructor(private configService: ConfigService) {
     const accessKeyId = this.configService.get<string>('R2_ACCESS_KEY_ID');
-    const secretAccessKey = this.configService.get<string>('R2_SECRET_ACCESS_KEY');
+    const secretAccessKey = this.configService.get<string>(
+      'R2_SECRET_ACCESS_KEY',
+    );
     const region = this.configService.get<string>('R2_REGION') ?? 'auto';
     this.bucketName = this.configService.get<string>('R2_BUCKET_NAME') ?? '';
     this.publicUrlBase = this.configService.get<string>('R2_PUBLIC_URL') ?? '';
 
     if (!accessKeyId || !secretAccessKey || !this.bucketName) {
-      throw new Error('R2 configuration is missing. Please set R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME');
+      throw new Error(
+        'R2 configuration is missing. Please set R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME',
+      );
     }
 
     this.s3Client = new S3Client({
@@ -41,12 +42,14 @@ export class UploadService {
     folder?: string,
   ): Promise<{ signedUrl: string; publicUrl: string; key: string }> {
     try {
-      console.log(`Generating upload URL for fileType: ${fileType}, extension: ${extension}, folder: ${folder}`);
+   
       // Generate unique filename
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substring(2, 15);
-      const ext = extension ? `.${extension}` : this.getDefaultExtension(fileType);
-      
+      const ext = extension
+        ? `.${extension}`
+        : this.getDefaultExtension(fileType);
+
       // Build the S3 key
       const folderPath = folder ? `${folder}/` : `${fileType}/`;
       const key = `${folderPath}${timestamp}-${randomId}${ext}`;
@@ -67,15 +70,17 @@ export class UploadService {
       });
 
       // Build public URL
-      const publicUrl = this.publicUrlBase 
-        ? `${this.publicUrlBase}/${key}` 
+      const publicUrl = this.publicUrlBase
+        ? `${this.publicUrlBase}/${key}`
         : `https://${this.bucketName}.${this.publicUrlBase}/${key}`;
-      console.log(signedUrl, publicUrl, key);
       return { signedUrl, publicUrl, key };
     } catch (error: any) {
       const message = error?.message || 'Unknown error generating upload URL';
 
-      if (error?.name === 'S3ServiceException' || error?.$metadata?.httpStatusCode === 403) {
+      if (
+        error?.name === 'S3ServiceException' ||
+        error?.$metadata?.httpStatusCode === 403
+      ) {
         throw new HttpException(
           'Failed to generate upload URL: access denied by R2. Check R2 credentials, permissions, and endpoint settings.',
           HttpStatus.FORBIDDEN,
@@ -104,7 +109,7 @@ export class UploadService {
 
   private getContentType(fileType: FileType, extension?: string): string {
     const ext = extension?.toLowerCase();
-    
+
     const mimeTypes: Record<string, string> = {
       jpg: 'image/jpeg',
       jpeg: 'image/jpeg',

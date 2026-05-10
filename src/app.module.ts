@@ -10,6 +10,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { QuotesModule } from './quotes/quotes.module';
 import { UploadModule } from './upload/upload.module';
 import { UsersModule } from './users/users.module';
+import { TosModule } from './tos/tos.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UsersModule } from './users/users.module';
     PricingModule,
     AuthModule,
     UsersModule,
+    TosModule,
     ListingsModule,
     QuotesModule,
     BookingsModule,

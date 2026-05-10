@@ -8,12 +8,7 @@ import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Two ranges overlap iff (startA < endB) AND (endA > startB) */
-function overlaps(
-  startA: Date,
-  endA: Date,
-  startB: Date,
-  endB: Date,
-): boolean {
+function overlaps(startA: Date, endA: Date, startB: Date, endB: Date): boolean {
   return startA < endB && endA > startB;
 }
 
@@ -52,7 +47,12 @@ export class AvailabilityService {
       }),
     ]);
 
-    const calendarDays = this.buildCalendarDays(startAt, endAt, blocks, confirmedBookings);
+    const calendarDays = this.buildCalendarDays(
+      startAt,
+      endAt,
+      blocks,
+      confirmedBookings,
+    );
 
     return {
       listingId,
@@ -77,8 +77,13 @@ export class AvailabilityService {
     while (current <= normalizedEnd) {
       const dayStart = new Date(current);
       const dayEnd = new Date(current.getTime() + 24 * 60 * 60 * 1000);
-      const isUnavailable = blocks.some((block) => overlaps(dayStart, dayEnd, block.startAt, block.endAt))
-        || bookings.some((booking) => overlaps(dayStart, dayEnd, booking.startAt, booking.endAt));
+      const isUnavailable =
+        blocks.some((block) =>
+          overlaps(dayStart, dayEnd, block.startAt, block.endAt),
+        ) ||
+        bookings.some((booking) =>
+          overlaps(dayStart, dayEnd, booking.startAt, booking.endAt),
+        );
       days.push({
         date: dayStart.toISOString().slice(0, 10),
         available: !isUnavailable,
@@ -93,7 +98,9 @@ export class AvailabilityService {
   }
 
   private normalizeDate(date: Date) {
-    return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    return new Date(
+      Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+    );
   }
 
   async createBlock(
@@ -155,7 +162,9 @@ export class AvailabilityService {
       throw new NotFoundException('Listing not found');
     }
     if (listing.ownerId !== ownerId) {
-      throw new ForbiddenException('Only the listing owner can perform this action');
+      throw new ForbiddenException(
+        'Only the listing owner can perform this action',
+      );
     }
   }
 }

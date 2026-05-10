@@ -41,7 +41,8 @@ export class ListingsController {
 
   @Get()
   @ApiOperation({
-    summary: 'List listings (excludes DELETED). sort=price: in-memory sort; pagination for price is over fetched set.',
+    summary:
+      'List listings (excludes DELETED). sort=price: in-memory sort; pagination for price is over fetched set.',
   })
   findAll(@Query() query: ListListingsQueryDto) {
     return this.listings.findAll(query);
@@ -53,7 +54,11 @@ export class ListingsController {
     @Param('id') id: string,
     @Query() query: AvailabilityCalendarQueryDto,
   ) {
-    return this.availability.getCalendar(id, new Date(query.startAt), new Date(query.endAt));
+    return this.availability.getCalendar(
+      id,
+      new Date(query.startAt),
+      new Date(query.endAt),
+    );
   }
 
   @Get(':id/availability')

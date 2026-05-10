@@ -13,7 +13,9 @@ export class BookingRenterGuard implements CanActivate {
   constructor(private readonly prisma: PrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<{ user: JwtUser; params: { id: string } }>();
+    const request = context
+      .switchToHttp()
+      .getRequest<{ user: JwtUser; params: { id: string } }>();
     const user = request.user;
     const bookingId = request.params?.id;
     if (!bookingId) return false;

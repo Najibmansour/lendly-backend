@@ -47,10 +47,7 @@ export class BookingsController {
 
   @Get()
   @ApiOperation({ summary: 'List my bookings; role=renter|owner' })
-  findAll(
-    @CurrentUser() user: JwtUser,
-    @Query() query: ListBookingsQueryDto,
-  ) {
+  findAll(@CurrentUser() user: JwtUser, @Query() query: ListBookingsQueryDto) {
     return this.bookings.findAll(user.id, query.role ?? 'renter');
   }
 

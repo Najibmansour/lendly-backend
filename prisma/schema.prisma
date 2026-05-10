@@ -35,20 +35,30 @@ enum PricingUnit {
   MONTH
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 model User {
-  id           String    @id @default(uuid())
-  email        String    @unique
-  passwordHash String
-  firstName    String
-  lastName     String
-  phone        String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  sessions     Session[]
-  listings     Listing[]
-  renterBookings Booking[] @relation("Renter")
-  ownerBookings  Booking[] @relation("Owner")
-  bookingIssues  BookingIssue[]
+  id                String           @id @default(uuid())
+  email             String           @unique
+  passwordHash      String
+  firstName         String
+  lastName          String
+  phone             String?          @unique
+  role              UserRole         @default(USER)
+  acceptedTosId     String?
+  acceptedTos       TermsOfService?  @relation("AcceptedTos", fields: [acceptedTosId], references: [id])
+  createdTosVersions TermsOfService[] @relation("CreatedTos")
+  tosAgreements     TosAgreement[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  sessions          Session[]
+  listings          Listing[]
+  renterBookings    Booking[]        @relation("Renter")
+  ownerBookings     Booking[]        @relation("Owner")
+  bookingIssues     BookingIssue[]
 
   @@map("users")
 }
@@ -66,6 +76,40 @@ model Session {
 
   @@index([userId])
   @@map("sessions")
+}
+
+model TermsOfService {
+  id          String          @id @default(uuid())
+  version               Int
+  filePath              String
+  checksum              String
+  locale                String          @default("en")
+  isActive              Boolean         @default(true)
+  requiresReacceptance  Boolean         @default(false)
+  createdById           String
+  createdBy             User            @relation("CreatedTos", fields: [createdById], references: [id], onDelete: Cascade)
+  acceptedByUsers       User[]          @relation("AcceptedTos")
+  publishedAt DateTime        @default(now())
+  agreements  TosAgreement[]
+
+  @@unique([version, locale])
+  @@index([version, locale])
+  @@map("terms_of_service")
+}
+
+model TosAgreement {
+  id           String          @id @default(uuid())
+  userId       String
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tosVersionId String
+  tosVersion   TermsOfService  @relation(fields: [tosVersionId], references: [id], onDelete: Restrict)
+  agreedAt     DateTime        @default(now())
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime        @default(now())
+
+  @@index([userId])
+  @@map("tos_agreements")
 }
 
 model Listing {

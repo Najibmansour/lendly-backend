@@ -58,7 +58,9 @@ describe('BookingsService', () => {
       });
 
       await expect(
-        service.completeBooking('booking-1', 'renter-1', { party: CompletionParty.RENTER }),
+        service.completeBooking('booking-1', 'renter-1', {
+          party: CompletionParty.RENTER,
+        }),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
@@ -69,7 +71,9 @@ describe('BookingsService', () => {
       });
 
       await expect(
-        service.completeBooking('booking-1', 'owner-1', { party: CompletionParty.OWNER }),
+        service.completeBooking('booking-1', 'owner-1', {
+          party: CompletionParty.OWNER,
+        }),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
@@ -77,7 +81,9 @@ describe('BookingsService', () => {
       prisma.booking.findUnique.mockResolvedValueOnce(baseBooking);
 
       await expect(
-        service.completeBooking('booking-1', 'other-user', { party: CompletionParty.RENTER }),
+        service.completeBooking('booking-1', 'other-user', {
+          party: CompletionParty.RENTER,
+        }),
       ).rejects.toBeInstanceOf(ForbiddenException);
     });
 

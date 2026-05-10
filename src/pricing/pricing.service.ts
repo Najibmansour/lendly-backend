@@ -28,13 +28,17 @@ export class PricingService {
     const durationHours = Math.ceil(diffMs / MS_PER_HOUR);
     const durationDays = Math.ceil(diffMs / MS_PER_DAY);
 
-    const toNum = (v: unknown): number | null =>
-      v != null ? Number(v) : null;
+    const toNum = (v: unknown): number | null => (v != null ? Number(v) : null);
     const hourlyRate = toNum(rates.hourlyRate);
     const dailyRate = toNum(rates.dailyRate);
     const weeklyRate = toNum(rates.weeklyRate);
 
-    const candidates: { unit: PricingUnit; quantity: number; unitRate: number; subtotal: number }[] = [];
+    const candidates: {
+      unit: PricingUnit;
+      quantity: number;
+      unitRate: number;
+      subtotal: number;
+    }[] = [];
 
     if (hourlyRate != null && hourlyRate > 0) {
       candidates.push({

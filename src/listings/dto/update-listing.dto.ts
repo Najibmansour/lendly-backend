@@ -1,5 +1,14 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayNotEmpty, IsArray, IsNumber, IsOptional, IsString, IsUrl, Min, MinLength } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class UpdateListingDto {
   @ApiPropertyOptional({ example: 'Road bike' })
@@ -8,7 +17,9 @@ export class UpdateListingDto {
   @MinLength(5)
   title?: string;
 
-  @ApiPropertyOptional({ example: 'Great condition road bike for weekend rides.' })
+  @ApiPropertyOptional({
+    example: 'Great condition road bike for weekend rides.',
+  })
   @IsOptional()
   @IsString()
   @MinLength(20)

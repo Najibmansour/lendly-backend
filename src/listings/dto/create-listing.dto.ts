@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayNotEmpty, IsArray, IsNumber, IsOptional, IsString, IsUrl, Min, MinLength } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class CreateListingDto {
   @ApiProperty({ example: 'Road bike' })
@@ -48,7 +57,12 @@ export class CreateListingDto {
   @IsString({ each: true })
   tags?: string[];
 
-  @ApiProperty({ example: ['https://example.com/image-1.jpg', 'https://example.com/image-2.jpg'] })
+  @ApiProperty({
+    example: [
+      'https://example.com/image-1.jpg',
+      'https://example.com/image-2.jpg',
+    ],
+  })
   @IsArray()
   @ArrayNotEmpty()
   @IsString({ each: true })

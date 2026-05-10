@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -27,33 +28,78 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<AuthTokens> {
+  async register(
+    dto: RegisterDto,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<AuthTokens> {
+    if (!dto.agreedToTos) {
+      throw new BadRequestException('You must agree to the Terms of Service');
+    }
+
+    const email = dto.email.toLowerCase();
+    const phone = dto.phone.trim();
+
     const existing = await this.prisma.user.findUnique({
-      where: { email: dto.email.toLowerCase() },
+      where: { email },
     });
     if (existing) {
       throw new ConflictException('Email already registered');
     }
-    const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email.toLowerCase(),
-        passwordHash,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-      },
+
+    const existingPhone = await this.prisma.user.findFirst({
+      where: { phone },
     });
-    return this.createSession(user.id, user.email);
+    if (existingPhone) {
+      throw new ConflictException('Phone number already registered');
+    }
+
+    const locale = dto.tosLocale?.toLowerCase() ?? 'en';
+    const tos = await this.prisma.termsOfService.findFirst({
+      where: { locale, isActive: true },
+      orderBy: { version: 'desc' },
+    });
+    if (!tos) {
+      throw new BadRequestException(
+        `No active Terms of Service found for locale '${locale}'`,
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
+    const user = await this.prisma.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: {
+          email,
+          passwordHash,
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          phone,
+          acceptedTosId: tos.id,
+          role: 'USER',
+        },
+      });
+
+      await tx.tosAgreement.create({
+        data: {
+          userId: createdUser.id,
+          tosVersionId: tos.id,
+          agreedAt: new Date(),
+          ipAddress: ipAddress || null,
+          userAgent: userAgent || null,
+        },
+      });
+
+      return createdUser;
+    });
+
+    return this.createSession(user.id, user.email, userAgent, ipAddress);
   }
 
   async login(dto: LoginDto): Promise<AuthTokens> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
     });
-    if (
-      !user ||
-      !(await bcrypt.compare(dto.password, user.passwordHash))
-    ) {
+    if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
       throw new UnauthorizedException('Invalid email or password');
     }
     return this.createSession(user.id, user.email);
@@ -65,11 +111,7 @@ export class AuthService {
       where: { id: payload.sessionId! },
       include: { user: true },
     });
-    if (
-      !session ||
-      session.revokedAt ||
-      session.userId !== payload.sub
-    ) {
+    if (!session || session.revokedAt || session.userId !== payload.sub) {
       throw new UnauthorizedException('Invalid or revoked session');
     }
     if (!(await bcrypt.compare(refreshToken, session.refreshTokenHash))) {
@@ -100,6 +142,7 @@ export class AuthService {
         firstName: true,
         lastName: true,
         phone: true,
+        acceptedTosId: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -119,7 +162,7 @@ export class AuthService {
       `${userId}:${Date.now()}:${Math.random()}`,
       SALT_ROUNDS,
     );
-  
+
     const session = await this.prisma.session.create({
       data: {
         userId,
@@ -128,42 +171,48 @@ export class AuthService {
         ip,
       },
     });
-  
+
     const accessSecret = this.config.get<string>('JWT_ACCESS_SECRET');
     if (!accessSecret) throw new Error('JWT_ACCESS_SECRET is not set');
-  
+
     const refreshSecret = this.config.get<string>('JWT_REFRESH_SECRET');
     if (!refreshSecret) throw new Error('JWT_REFRESH_SECRET is not set');
-  
-    const accessExpiresIn = this.config.get<string>('JWT_ACCESS_EXPIRES_IN') ?? '15m';
-    const refreshExpiresIn = this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '30d';
-  
+
+    const accessExpiresIn =
+      this.config.get<string>('JWT_ACCESS_EXPIRES_IN') ?? '15m';
+    const refreshExpiresIn =
+      this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '30d';
+
     const accessToken = this.jwt.sign(
       { sub: userId, email, type: 'access' } as TokenPayload,
       { secret: accessSecret, expiresIn: accessExpiresIn as any },
     );
-  
+
     const refreshToken = this.jwt.sign(
-      { sub: userId, email, type: 'refresh', sessionId: session.id } as TokenPayload,
+      {
+        sub: userId,
+        email,
+        type: 'refresh',
+        sessionId: session.id,
+      } as TokenPayload,
       { secret: refreshSecret, expiresIn: refreshExpiresIn as any },
     );
-  
+
     const refreshTokenHash = await bcrypt.hash(refreshToken, SALT_ROUNDS);
-  
+
     await this.prisma.session.update({
       where: { id: session.id },
       data: { refreshTokenHash },
     });
-  
+
     const expiresInSeconds = this.parseExpiresIn(accessExpiresIn);
-  
+
     return {
       accessToken,
       refreshToken,
       expiresIn: expiresInSeconds,
     };
   }
-  
 
   private async verifyRefreshToken(token: string): Promise<TokenPayload> {
     try {

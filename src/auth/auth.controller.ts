@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
 import { AuthService, AuthTokens } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { JwtUser } from './strategies/jwt.strategy';
@@ -16,8 +17,18 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
-  register(@Body() dto: RegisterDto): Promise<AuthTokens> {
-    return this.auth.register(dto);
+  register(@Body() dto: RegisterDto, @Req() req: Request): Promise<AuthTokens> {
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip =
+      typeof forwarded === 'string'
+        ? forwarded.split(',')[0].trim()
+        : Array.isArray(forwarded)
+          ? forwarded[0]?.split(',')[0].trim()
+          : req.socket.remoteAddress;
+    const userAgent = Array.isArray(req.headers['user-agent'])
+      ? req.headers['user-agent'][0]
+      : req.headers['user-agent'];
+    return this.auth.register(dto, ip, userAgent);
   }
 
   @Post('login')

@@ -1,7 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsOptional, IsUUID } from 'class-validator';
 
-export const UNIT_PREFERENCE_VALUES = ['AUTO', 'HOUR', 'DAY', 'WEEK', 'MONTH'] as const;
+export const UNIT_PREFERENCE_VALUES = [
+  'AUTO',
+  'HOUR',
+  'DAY',
+  'WEEK',
+  'MONTH',
+] as const;
 export type UnitPreferenceDto = (typeof UNIT_PREFERENCE_VALUES)[number];
 
 export class CreateQuoteDto {

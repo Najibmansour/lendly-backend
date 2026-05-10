@@ -8,7 +8,9 @@ export function toDecimal(value: number): Prisma.Decimal {
   return new Prisma.Decimal(String(value));
 }
 
-export function toDecimalOrUndefined(value: number | undefined): Prisma.Decimal | undefined {
+export function toDecimalOrUndefined(
+  value: number | undefined,
+): Prisma.Decimal | undefined {
   if (value === undefined) return undefined;
   return new Prisma.Decimal(String(value));
 }

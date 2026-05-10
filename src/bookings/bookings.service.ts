@@ -10,7 +10,10 @@ import { PricingService } from '../pricing/pricing.service';
 import { UnitPreference } from '../pricing/pricing.types';
 import { toDecimal } from '../common/decimal.util';
 import { CreateBookingDto } from './dto/create-booking.dto';
-import { CompleteBookingDto, CompletionParty } from './dto/complete-booking.dto';
+import {
+  CompleteBookingDto,
+  CompletionParty,
+} from './dto/complete-booking.dto';
 import { CreateBookingIssueDto } from './dto/create-booking-issue.dto';
 
 const PAYMENT_STATUS_VALUES = ['UNPAID', 'HOLD', 'PAID', 'FAILED'] as const;
@@ -86,9 +89,8 @@ export class BookingsService {
   }
 
   async findAll(userId: string, role: 'renter' | 'owner') {
-    const where = role === 'renter'
-      ? { renterId: userId }
-      : { ownerId: userId };
+    const where =
+      role === 'renter' ? { renterId: userId } : { ownerId: userId };
     const bookings = await this.prisma.booking.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -106,15 +108,24 @@ export class BookingsService {
       where: { id },
       include: {
         listing: true,
-        owner: { select: { id: true, firstName: true, lastName: true, phone: true } },
-        renter: { select: { id: true, firstName: true, lastName: true, phone: true } },
+        owner: {
+          select: { id: true, firstName: true, lastName: true, phone: true },
+          // select: { id: true, firstName: true, lastName: true },
+        },
+        renter: {
+          select: { id: true, firstName: true, lastName: true, phone: true },
+         
+          // select: { id: true, firstName: true, lastName: true },
+        },
       },
     });
     if (!booking) {
       throw new NotFoundException('Booking not found');
     }
     if (booking.ownerId !== userId && booking.renterId !== userId) {
-      throw new ForbiddenException('Only the renter or owner can view this booking');
+      throw new ForbiddenException(
+        'Only the renter or owner can view this booking',
+      );
     }
     return this.withCompletion(booking);
   }
@@ -135,9 +146,13 @@ export class BookingsService {
       if (booking.status !== BookingStatus.PENDING) {
         throw new BadRequestException('Only PENDING bookings can be accepted');
       }
-      const paymentStatus = (booking as any).paymentStatus as PaymentStatusValue | undefined;
+      const paymentStatus = (booking as any).paymentStatus as
+        | PaymentStatusValue
+        | undefined;
       if (paymentStatus === 'UNPAID' || paymentStatus === 'FAILED') {
-        throw new BadRequestException('Booking payment must be on hold or paid before acceptance');
+        throw new BadRequestException(
+          'Booking payment must be on hold or paid before acceptance',
+        );
       }
 
       await this.checkAvailabilityTx(
@@ -200,8 +215,13 @@ export class BookingsService {
     if (booking.status === BookingStatus.PENDING) {
       this.assertPendingBookingNotExpired(booking);
     }
-    if (booking.status !== BookingStatus.PENDING && booking.status !== BookingStatus.CONFIRMED) {
-      throw new BadRequestException('Only PENDING or CONFIRMED bookings can be cancelled');
+    if (
+      booking.status !== BookingStatus.PENDING &&
+      booking.status !== BookingStatus.CONFIRMED
+    ) {
+      throw new BadRequestException(
+        'Only PENDING or CONFIRMED bookings can be cancelled',
+      );
     }
     const updated = await this.prisma.booking.update({
       where: { id },
@@ -215,7 +235,15 @@ export class BookingsService {
     return this.withCompletion(updated);
   }
 
-  async updatePayment(id: string, renterId: string, dto: { paymentStatus?: PaymentStatusValue; depositAmount?: number; paymentReference?: string }) {
+  async updatePayment(
+    id: string,
+    renterId: string,
+    dto: {
+      paymentStatus?: PaymentStatusValue;
+      depositAmount?: number;
+      paymentReference?: string;
+    },
+  ) {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
     });
@@ -223,10 +251,14 @@ export class BookingsService {
       throw new NotFoundException('Booking not found');
     }
     if (booking.renterId !== renterId) {
-      throw new ForbiddenException('Only the renter can update payment information');
+      throw new ForbiddenException(
+        'Only the renter can update payment information',
+      );
     }
     if (booking.status !== BookingStatus.PENDING) {
-      throw new BadRequestException('Only PENDING bookings can update payment information');
+      throw new BadRequestException(
+        'Only PENDING bookings can update payment information',
+      );
     }
     this.assertPendingBookingNotExpired(booking);
 
@@ -319,7 +351,11 @@ export class BookingsService {
     });
   }
 
-  async createBookingIssue(id: string, userId: string, dto: CreateBookingIssueDto) {
+  async createBookingIssue(
+    id: string,
+    userId: string,
+    dto: CreateBookingIssueDto,
+  ) {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
     });
@@ -353,13 +389,18 @@ export class BookingsService {
     });
   }
 
-  private assertPendingBookingNotExpired(booking: { status: BookingStatus; expiresAt?: Date | null }) {
+  private assertPendingBookingNotExpired(booking: {
+    status: BookingStatus;
+    expiresAt?: Date | null;
+  }) {
     if (
       booking.status === BookingStatus.PENDING &&
       booking.expiresAt &&
       booking.expiresAt.getTime() < Date.now()
     ) {
-      throw new BadRequestException('Booking has expired and is no longer actionable');
+      throw new BadRequestException(
+        'Booking has expired and is no longer actionable',
+      );
     }
   }
 
@@ -368,7 +409,9 @@ export class BookingsService {
     userId: string,
   ) {
     if (booking.ownerId !== userId && booking.renterId !== userId) {
-      throw new ForbiddenException('Only the renter or owner can perform this action');
+      throw new ForbiddenException(
+        'Only the renter or owner can perform this action',
+      );
     }
   }
 
@@ -378,10 +421,14 @@ export class BookingsService {
     party: CompletionParty,
   ) {
     if (party === CompletionParty.RENTER && booking.renterId !== userId) {
-      throw new ForbiddenException('Party mismatch: only renter can complete as renter');
+      throw new ForbiddenException(
+        'Party mismatch: only renter can complete as renter',
+      );
     }
     if (party === CompletionParty.OWNER && booking.ownerId !== userId) {
-      throw new ForbiddenException('Party mismatch: only owner can complete as owner');
+      throw new ForbiddenException(
+        'Party mismatch: only owner can complete as owner',
+      );
     }
   }
 
@@ -389,10 +436,18 @@ export class BookingsService {
     return Date.now() >= booking.endAt.getTime();
   }
 
-  private withCompletion<T extends { renterConfirmedAt?: Date | null; ownerConfirmedAt?: Date | null }>(
+  private withCompletion<
+    T extends {
+      renterConfirmedAt?: Date | null;
+      ownerConfirmedAt?: Date | null;
+    },
+  >(
     booking: T,
   ): T & {
-    completion: { renterConfirmedAt: Date | null; ownerConfirmedAt: Date | null };
+    completion: {
+      renterConfirmedAt: Date | null;
+      ownerConfirmedAt: Date | null;
+    };
   } {
     return {
       ...booking,
@@ -406,7 +461,9 @@ export class BookingsService {
   private parseDateOrThrow(value: string, fieldName: string): Date {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) {
-      throw new BadRequestException(`${fieldName} is not a valid ISO date string`);
+      throw new BadRequestException(
+        `${fieldName} is not a valid ISO date string`,
+      );
     }
     return date;
   }
