@@ -39,7 +39,7 @@
     "class-validator": "^0.14.3",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
-    "pg": "^8.18.0",
+    "pg": "^8.20.0",
     "prisma": "^7.4.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
@@ -71,6 +71,7 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
