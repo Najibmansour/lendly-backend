@@ -91,6 +91,78 @@ export class UsersService {
     });
   }
 
+  async getMyData(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        termsAcceptedAt: true,
+        privacyAcceptedAt: true,
+        consentVersion: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return { user };
+  }
+
+  async requestDeletion(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { deletionRequestedAt: new Date() },
+    });
+
+    await this.prisma.session.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    return {
+      message: 'Your account deletion request has been recorded.',
+    };
+  }
+
+  async anonymizeUser(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        email: `deleted-user-${id}@deleted.local`,
+        firstName: 'Deleted',
+        lastName: 'User',
+        phone: null,
+        consentIp: null,
+        consentUserAgent: null,
+        deletedAt: new Date(),
+        anonymizedAt: new Date(),
+      },
+    });
+
+    await this.prisma.session.updateMany({
+      where: { userId: id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    return {
+      message: 'User has been anonymized successfully.',
+    };
+  }
+
   async findOnePublic(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },

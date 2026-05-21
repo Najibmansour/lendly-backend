@@ -12,6 +12,7 @@ import { QuotesModule } from './quotes/quotes.module';
 import { UploadModule } from './upload/upload.module';
 import { UsersModule } from './users/users.module';
 import { TosModule } from './tos/tos.module';
+import { LegalModule } from './legal/legal.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { TosModule } from './tos/tos.module';
     AuthModule,
     UsersModule,
     TosModule,
+    LegalModule,
     ListingsModule,
     QuotesModule,
     BookingsModule,

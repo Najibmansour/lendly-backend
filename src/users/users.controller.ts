@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -26,6 +26,22 @@ export class UsersController {
   @ApiOperation({ summary: 'Get current user profile' })
   getMe(@CurrentUser() user: JwtUser) {
     return this.users.findMe(user.id);
+  }
+
+  @Get('me/data')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user personal data' })
+  getMyData(@CurrentUser() user: JwtUser) {
+    return this.users.getMyData(user.id);
+  }
+
+  @Post('me/delete-request')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Request account deletion' })
+  requestDeletion(@CurrentUser() user: JwtUser) {
+    return this.users.requestDeletion(user.id);
   }
 
   @Get('me/tos-agreement-latest')

@@ -51,6 +51,14 @@ model User {
   acceptedTos       TermsOfService?  @relation("AcceptedTos", fields: [acceptedTosId], references: [id])
   createdTosVersions TermsOfService[] @relation("CreatedTos")
   tosAgreements     TosAgreement[]
+  termsAcceptedAt   DateTime?
+  privacyAcceptedAt DateTime?
+  consentVersion    String?
+  consentIp         String?
+  consentUserAgent  String?
+  deletionRequestedAt DateTime?
+  deletedAt         DateTime?
+  anonymizedAt      DateTime?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   sessions          Session[]

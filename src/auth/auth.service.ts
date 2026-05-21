@@ -11,6 +11,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { TokenPayload } from './auth.types';
+import { CURRENT_LEGAL_VERSION } from '../legal/legal.constants';
 
 const SALT_ROUNDS = 10;
 
@@ -33,8 +34,11 @@ export class AuthService {
     ipAddress?: string,
     userAgent?: string,
   ): Promise<AuthTokens> {
-    if (!dto.agreedToTos) {
-      throw new BadRequestException('You must agree to the Terms of Service');
+    if (!dto.acceptTerms) {
+      throw new BadRequestException('You must accept the Terms of Service');
+    }
+    if (!dto.acceptPrivacy) {
+      throw new BadRequestException('You must accept the privacy policy');
     }
 
     const email = dto.email.toLowerCase();
@@ -75,6 +79,11 @@ export class AuthService {
           lastName: dto.lastName,
           phone,
           acceptedTosId: tos.id,
+          termsAcceptedAt: new Date(),
+          privacyAcceptedAt: new Date(),
+          consentVersion: CURRENT_LEGAL_VERSION,
+          consentIp: ipAddress || null,
+          consentUserAgent: userAgent || null,
           role: 'USER',
         },
       });
@@ -232,6 +241,26 @@ export class AuthService {
     await this.prisma.session.update({
       where: { id: sessionId },
       data: { revokedAt: new Date() },
+    });
+  }
+
+  async cleanupExpiredSessions() {
+    const now = new Date();
+    const refreshExpiresIn =
+      this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '30d';
+    const maxAgeSeconds = this.parseExpiresIn(refreshExpiresIn);
+    const retentionSeconds = maxAgeSeconds + 7 * 86400;
+
+    const expiredDate = new Date(now.getTime() - retentionSeconds * 1000);
+    const revokedRetentionDate = new Date(now.getTime() - 30 * 86400 * 1000);
+
+    await this.prisma.session.deleteMany({
+      where: {
+        OR: [
+          { createdAt: { lt: expiredDate } },
+          { revokedAt: { lt: revokedRetentionDate } },
+        ],
+      },
     });
   }
 
