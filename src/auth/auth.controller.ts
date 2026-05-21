@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Request } from 'express';
 import { AuthService, AuthTokens } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -11,11 +12,13 @@ import { RefreshDto } from './dto/refresh.dto';
 import { LogoutDto } from './dto/logout.dto';
 
 @ApiTags('auth')
+@UseGuards(ThrottlerGuard)
 @Controller('v1/auth')
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60 } })
   @ApiOperation({ summary: 'Register a new user' })
   register(@Body() dto: RegisterDto, @Req() req: Request): Promise<AuthTokens> {
     const forwarded = req.headers['x-forwarded-for'];
@@ -32,12 +35,14 @@ export class AuthController {
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 8, ttl: 60 } })
   @ApiOperation({ summary: 'Login' })
   login(@Body() dto: LoginDto): Promise<AuthTokens> {
     return this.auth.login(dto);
   }
 
   @Post('refresh')
+  @Throttle({ default: { limit: 30, ttl: 60 } })
   @ApiOperation({ summary: 'Refresh access token' })
   refresh(@Body() dto: RefreshDto): Promise<AuthTokens> {
     return this.auth.refresh(dto.refreshToken);

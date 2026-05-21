@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -15,6 +16,14 @@ import { TosModule } from './tos/tos.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          limit: 50,
+          ttl: 60,
+        },
+      ],
+    }),
     PrismaModule,
     PricingModule,
     AuthModule,

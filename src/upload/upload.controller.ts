@@ -1,4 +1,5 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
@@ -10,12 +11,13 @@ import { GenerateUploadUrlDto, FileType } from './dto/generate-upload-url.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Upload')
+@UseGuards(JwtAuthGuard, ThrottlerGuard)
 @Controller('v1/api/upload-url')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 20, ttl: 60 } })
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Generate presigned URL for direct cloud upload',
