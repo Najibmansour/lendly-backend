@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { ListingsModule } from './listings/listings.module';
+import { HomeModule } from './home/home.module';
 import { PricingModule } from './pricing/pricing.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { QuotesModule } from './quotes/quotes.module';
@@ -32,6 +33,7 @@ import { LegalModule } from './legal/legal.module';
     TosModule,
     LegalModule,
     ListingsModule,
+    HomeModule,
     QuotesModule,
     BookingsModule,
     UploadModule,
