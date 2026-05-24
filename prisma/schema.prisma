@@ -11,7 +11,6 @@ enum ListingStatus {
   PAUSED
   DELETED
 }
-
 enum BookingStatus {
   PENDING
   CONFIRMED
@@ -66,6 +65,10 @@ model User {
   renterBookings    Booking[]        @relation("Renter")
   ownerBookings     Booking[]        @relation("Owner")
   bookingIssues     BookingIssue[]
+  categoriesCreated Category[]       @relation("CategoryCreatedBy")
+  categoriesUpdated Category[]       @relation("CategoryUpdatedBy")
+  tagsCreated       Tag[]            @relation("TagCreatedBy")
+  tagsUpdated       Tag[]            @relation("TagUpdatedBy")
 
   @@map("users")
 }
@@ -125,13 +128,16 @@ model Listing {
   owner              User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   title              String
   description        String
-  category           String
+  category           String?
+  categoryId         String?
+  category_rel       Category? @relation(fields: [categoryId], references: [id])
   city               String?
   latitude           Float
   longitude          Float
   address            String
   condition          String?
   tags               String[]
+  listingTags        ListingTag[]
   images             String[]
   imageUrl           String?
   hourlyRate         Decimal?
@@ -146,8 +152,66 @@ model Listing {
   @@index([ownerId])
   @@index([status])
   @@index([category])
+  @@index([categoryId])
   @@index([city])
   @@map("listings")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  icon        String?
+  color       String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdById String?
+  createdBy   User?     @relation("CategoryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById String?
+  updatedBy   User?     @relation("CategoryUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  listings    Listing[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("categories")
+}
+
+model Tag {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  isActive    Boolean   @default(true)
+  createdById String?
+  createdBy   User?     @relation("TagCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById String?
+  updatedBy   User?     @relation("TagUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  listingTags ListingTag[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("tags")
+}
+
+model ListingTag {
+  id        String   @id @default(uuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([listingId, tagId])
+  @@index([listingId])
+  @@index([tagId])
+  @@map("listing_tags")
 }
 
 model AvailabilityBlock {

@@ -8,6 +8,7 @@ import {
   IsUrl,
   Min,
   MinLength,
+  IsUUID,
 } from 'class-validator';
 
 export class UpdateListingDto {
@@ -25,11 +26,11 @@ export class UpdateListingDto {
   @MinLength(20)
   description?: string;
 
-  @ApiPropertyOptional({ example: 'bikes' })
+  @ApiPropertyOptional({ example: 'uuid-of-category-id' })
   @IsOptional()
   @IsString()
-  @MinLength(2)
-  category?: string;
+  @IsUUID()
+  categoryId?: string;
 
   @ApiPropertyOptional({ example: 'Berlin' })
   @IsOptional()
@@ -59,11 +60,15 @@ export class UpdateListingDto {
   @MinLength(2)
   condition?: string;
 
-  @ApiPropertyOptional({ example: ['Heavy Duty'] })
+  @ApiPropertyOptional({
+    example: ['uuid-tag-1', 'uuid-tag-2'],
+    description: 'Array of tag UUIDs (max 5)',
+  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  tags?: string[];
+  @IsUUID('all', { each: true })
+  tagIds?: string[];
 
   @ApiPropertyOptional({ example: ['https://example.com/image-1.jpg'] })
   @IsOptional()

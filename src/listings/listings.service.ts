@@ -57,17 +57,47 @@ export class ListingsService {
       throw new BadRequestException('Listing must include at least one image');
     }
 
+    const category = await this.prisma.category.findUnique({
+      where: { id: dto.categoryId },
+    });
+    if (!category || category.deletedAt || !category.isActive) {
+      throw new BadRequestException('Invalid categoryId');
+    }
+
+    const tagIds = dto.tagIds ?? [];
+    if (tagIds.length > 5) {
+      throw new BadRequestException('Maximum 5 tags per listing');
+    }
+    if (new Set(tagIds).size !== tagIds.length) {
+      throw new BadRequestException('Duplicate tag IDs are not allowed');
+    }
+
+    const tags = await this.prisma.tag.findMany({
+      where: { id: { in: tagIds } },
+    });
+    if (tags.length !== tagIds.length) {
+      throw new BadRequestException('One or more tags do not exist');
+    }
+    const inactiveTags = tags.filter((tag) => !tag.isActive || tag.deletedAt);
+    if (inactiveTags.length > 0) {
+      throw new BadRequestException('One or more tags are inactive');
+    }
+
     const createData: any = {
       ownerId,
       title: dto.title,
       description: dto.description,
-      category: dto.category,
+      category: category.slug,
+      categoryId: category.id,
       city: dto.city,
       latitude: dto.latitude,
       longitude: dto.longitude,
       address: dto.address,
       condition: dto.condition,
-      tags: dto.tags ?? [],
+      tags: tagIds,
+      listingTags: {
+        create: tagIds.map((tagId) => ({ tagId })),
+      },
       images: dto.images,
       imageUrl: dto.imageUrl ?? dto.images[0],
       hourlyRate: toDecimalOrUndefined(dto.hourlyRate),
@@ -180,13 +210,47 @@ export class ListingsService {
     const data: any = {};
     if (dto.title !== undefined) data.title = dto.title;
     if (dto.description !== undefined) data.description = dto.description;
-    if (dto.category !== undefined) data.category = dto.category;
+    if (dto.categoryId !== undefined) {
+      const category = await this.prisma.category.findUnique({
+        where: { id: dto.categoryId },
+      });
+      if (!category || category.deletedAt || !category.isActive) {
+        throw new BadRequestException('Invalid categoryId');
+      }
+      data.categoryId = dto.categoryId;
+      data.category = category.slug;
+    }
     if (dto.city !== undefined) data.city = dto.city;
     if (dto.latitude !== undefined) data.latitude = dto.latitude;
     if (dto.longitude !== undefined) data.longitude = dto.longitude;
     if (dto.address !== undefined) data.address = dto.address;
     if (dto.condition !== undefined) data.condition = dto.condition;
-    if (dto.tags !== undefined) data.tags = dto.tags;
+    if (dto.tagIds !== undefined) {
+      const tagIds = dto.tagIds ?? [];
+      if (tagIds.length > 5) {
+        throw new BadRequestException('Maximum 5 tags per listing');
+      }
+      if (new Set(tagIds).size !== tagIds.length) {
+        throw new BadRequestException('Duplicate tag IDs are not allowed');
+      }
+
+      const tags = await this.prisma.tag.findMany({
+        where: { id: { in: tagIds } },
+      });
+      if (tags.length !== tagIds.length) {
+        throw new BadRequestException('One or more tags do not exist');
+      }
+      const inactiveTags = tags.filter((tag) => !tag.isActive || tag.deletedAt);
+      if (inactiveTags.length > 0) {
+        throw new BadRequestException('One or more tags are inactive');
+      }
+
+      data.tags = tagIds;
+      data.listingTags = {
+        deleteMany: {},
+        create: tagIds.map((tagId) => ({ tagId })),
+      };
+    }
     if (dto.images !== undefined) {
       data.images = dto.images;
       data.imageUrl = dto.images.length > 0 ? dto.images[0] : null;

@@ -14,6 +14,8 @@ import { UploadModule } from './upload/upload.module';
 import { UsersModule } from './users/users.module';
 import { TosModule } from './tos/tos.module';
 import { LegalModule } from './legal/legal.module';
+import { CategoriesModule } from './categories/categories.module';
+import { TagsModule } from './tags/tags.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { LegalModule } from './legal/legal.module';
     UsersModule,
     TosModule,
     LegalModule,
+    CategoriesModule,
+    TagsModule,
     ListingsModule,
     HomeModule,
     QuotesModule,
