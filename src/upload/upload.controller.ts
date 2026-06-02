@@ -17,7 +17,7 @@ export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   @Post()
-  @Throttle({ default: { limit: 20, ttl: 60 } })
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Generate presigned URL for direct cloud upload',

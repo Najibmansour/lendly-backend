@@ -6,7 +6,6 @@ export const UNIT_PREFERENCE_VALUES = [
   'HOUR',
   'DAY',
   'WEEK',
-  'MONTH',
 ] as const;
 export type UnitPreferenceDto = (typeof UNIT_PREFERENCE_VALUES)[number];
 

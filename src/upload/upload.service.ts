@@ -4,6 +4,26 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { FileType } from './dto/generate-upload-url.dto';
 
+// Allowed extensions per file type (strict whitelist)
+const ALLOWED_EXTENSIONS: Record<FileType, Set<string>> = {
+  [FileType.IMAGE]: new Set(['jpg', 'jpeg', 'png', 'gif', 'webp']),
+  [FileType.VIDEO]: new Set(['mp4', 'webm', 'mov']),
+  [FileType.DOCUMENT]: new Set(['pdf']),
+};
+
+// Magic byte signatures for file type validation
+const MAGIC_BYTES: Record<string, Buffer[]> = {
+  jpg: [Buffer.from([0xFF, 0xD8, 0xFF])],
+  jpeg: [Buffer.from([0xFF, 0xD8, 0xFF])],
+  png: [Buffer.from([0x89, 0x50, 0x4E, 0x47])],
+  gif: [Buffer.from([0x47, 0x49, 0x46, 0x38])],
+  webp: [Buffer.from([0x52, 0x49, 0x46, 0x46])], // RIFF header
+  pdf: [Buffer.from([0x25, 0x50, 0x44, 0x46])], // %PDF
+  mp4: [Buffer.from([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70])],
+  webm: [Buffer.from([0x1A, 0x45, 0xDF, 0xA3])],
+  mov: [Buffer.from([0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70])],
+};
+
 @Injectable()
 export class UploadService {
   private s3Client: S3Client;
@@ -42,37 +62,49 @@ export class UploadService {
     folder?: string,
   ): Promise<{ signedUrl: string; publicUrl: string; key: string }> {
     try {
-   
-      // Generate unique filename
+      // 1. Validate extension against whitelist
+      const ext = (extension ?? this.getDefaultExtension(fileType)).toLowerCase();
+      if (!ALLOWED_EXTENSIONS[fileType].has(ext)) {
+        throw new HttpException(
+          `File extension .${ext} not allowed for ${fileType} uploads. Allowed: ${Array.from(ALLOWED_EXTENSIONS[fileType]).join(', ')}`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // 2. Generate unique filename
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substring(2, 15);
-      const ext = extension
-        ? `.${extension}`
-        : this.getDefaultExtension(fileType);
+      const finalExt = `.${ext}`;
 
-      // Build the S3 key
+      // 3. Build the S3 key
       const folderPath = folder ? `${folder}/` : `${fileType}/`;
-      const key = `${folderPath}${timestamp}-${randomId}${ext}`;
+      const key = `${folderPath}${timestamp}-${randomId}${finalExt}`;
 
-      // Determine content type based on file type
-      const contentType = this.getContentType(fileType, extension);
+      // 4. Determine content type based on file type (not extension)
+      const contentType = this.getContentType(fileType, ext);
 
-      // Create the PutObject command
+      // 5. Create the PutObject command
       const command = new PutObjectCommand({
         Bucket: this.bucketName,
         Key: key,
         ContentType: contentType,
+        // Add metadata for security tracking
+        Metadata: {
+          'uploaded-at': new Date().toISOString(),
+          'file-type': fileType,
+        },
       });
 
-      // Generate presigned URL (expires in 5 minutes)
+      // 6. Generate presigned URL (expires in 5 minutes)
       const signedUrl = await getSignedUrl(this.s3Client, command, {
         expiresIn: 300,
       });
 
-      // Build public URL
+      // 7. Build public URL
       const publicUrl = this.publicUrlBase
         ? `${this.publicUrlBase}/${key}`
         : `https://${this.bucketName}.${this.publicUrlBase}/${key}`;
+      
       return { signedUrl, publicUrl, key };
     } catch (error: any) {
       const message = error?.message || 'Unknown error generating upload URL';
@@ -94,49 +126,42 @@ export class UploadService {
     }
   }
 
+  /**
+   * Validate file magic bytes match extension
+   * NOTE: This should be called AFTER upload to verify actual file content
+   * Use with presigned URL POST policies or server-side multipart upload
+   */
+  validateFileMagicBytes(buffer: Buffer, extension: string): boolean {
+    const ext = extension.toLowerCase();
+    const signatures = MAGIC_BYTES[ext];
+    
+    if (!signatures) return false;
+    
+    return signatures.some(sig => buffer.subarray(0, sig.length).equals(sig));
+  }
+
   private getDefaultExtension(fileType: FileType): string {
     switch (fileType) {
       case FileType.IMAGE:
-        return '.jpg';
+        return 'jpg'; // No dot - will be added by caller
       case FileType.VIDEO:
-        return '.mp4';
+        return 'mp4';
       case FileType.DOCUMENT:
-        return '.pdf';
+        return 'pdf';
       default:
         return '';
     }
   }
 
   private getContentType(fileType: FileType, extension?: string): string {
-    const ext = extension?.toLowerCase();
-
-    const mimeTypes: Record<string, string> = {
-      jpg: 'image/jpeg',
-      jpeg: 'image/jpeg',
-      png: 'image/png',
-      gif: 'image/gif',
-      webp: 'image/webp',
-      heic: 'image/heic',
-      mp4: 'video/mp4',
-      mov: 'video/quicktime',
-      webm: 'video/webm',
-      pdf: 'application/pdf',
-      doc: 'application/msword',
-      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    };
-
-    if (ext && mimeTypes[ext]) {
-      return mimeTypes[ext];
-    }
-
-    // Default based on file type
+    // Always return safe MIME types based on FileType enum, never trust extension
     switch (fileType) {
       case FileType.IMAGE:
-        return 'image/jpeg';
+        return 'image/jpeg'; // Secure default for images
       case FileType.VIDEO:
-        return 'video/mp4';
+        return 'video/mp4'; // Secure default for videos
       case FileType.DOCUMENT:
-        return 'application/pdf';
+        return 'application/pdf'; // Only allow PDF for documents
       default:
         return 'application/octet-stream';
     }

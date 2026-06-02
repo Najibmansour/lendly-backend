@@ -7,6 +7,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -23,12 +24,13 @@ import { CreateBookingIssueDto } from './dto/create-booking-issue.dto';
 
 @ApiTags('bookings')
 @Controller('v1/bookings')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ThrottlerGuard)
 @ApiBearerAuth()
 export class BookingsController {
   constructor(private readonly bookings: BookingsService) {}
 
   @Post()
+  @Throttle({ default: { limit: 20, ttl: 60 } })
   @ApiOperation({ summary: 'Create a booking (JWT)' })
   create(@CurrentUser() user: JwtUser, @Body() dto: CreateBookingDto) {
     return this.bookings.create(user.id, dto);
@@ -36,6 +38,7 @@ export class BookingsController {
 
   @Post(':id/payment')
   @UseGuards(BookingRenterGuard)
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @ApiOperation({ summary: 'Update booking payment/hold info (renter only)' })
   updatePayment(
     @Param('id') id: string,
@@ -46,6 +49,7 @@ export class BookingsController {
   }
 
   @Get()
+  @Throttle({ default: { limit: 30, ttl: 60 } })
   @ApiOperation({ summary: 'List my bookings; role=renter|owner' })
   findAll(@CurrentUser() user: JwtUser, @Query() query: ListBookingsQueryDto) {
     return this.bookings.findAll(user.id, query.role ?? 'renter');
@@ -53,6 +57,7 @@ export class BookingsController {
 
   @Get(':id')
   @UseGuards(BookingParticipantGuard)
+  @Throttle({ default: { limit: 30, ttl: 60 } })
   @ApiOperation({ summary: 'Get booking by ID (renter or owner only)' })
   findOne(@Param('id') id: string, @CurrentUser() user: JwtUser) {
     return this.bookings.findOne(id, user.id);
@@ -60,6 +65,7 @@ export class BookingsController {
 
   @Post(':id/accept')
   @UseGuards(BookingOwnerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @ApiOperation({ summary: 'Accept booking (owner only)' })
   accept(@Param('id') id: string, @CurrentUser() user: JwtUser) {
     return this.bookings.accept(id, user.id);
@@ -67,6 +73,7 @@ export class BookingsController {
 
   @Post(':id/decline')
   @UseGuards(BookingOwnerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @ApiOperation({ summary: 'Decline booking (owner only)' })
   decline(@Param('id') id: string, @CurrentUser() user: JwtUser) {
     return this.bookings.decline(id, user.id);
@@ -74,6 +81,7 @@ export class BookingsController {
 
   @Post(':id/cancel')
   @UseGuards(BookingRenterGuard)
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @ApiOperation({ summary: 'Cancel booking (renter only)' })
   cancel(@Param('id') id: string, @CurrentUser() user: JwtUser) {
     return this.bookings.cancel(id, user.id);
@@ -81,6 +89,7 @@ export class BookingsController {
 
   @Post(':id/complete')
   @UseGuards(BookingParticipantGuard)
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @ApiOperation({ summary: 'Mark booking completion as renter or owner' })
   complete(
     @Param('id') id: string,
@@ -92,6 +101,7 @@ export class BookingsController {
 
   @Post(':id/issues')
   @UseGuards(BookingParticipantGuard)
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @ApiOperation({ summary: 'Create booking issue report (participant only)' })
   createIssue(
     @Param('id') id: string,
@@ -103,6 +113,7 @@ export class BookingsController {
 
   @Get(':id/issues')
   @UseGuards(BookingParticipantGuard)
+  @Throttle({ default: { limit: 20, ttl: 60 } })
   @ApiOperation({ summary: 'List booking issues (participant only)' })
   getIssues(@Param('id') id: string, @CurrentUser() user: JwtUser) {
     return this.bookings.getBookingIssues(id, user.id);

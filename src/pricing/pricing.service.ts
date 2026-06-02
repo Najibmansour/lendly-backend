@@ -5,7 +5,6 @@ import { QuoteResult, UnitPreference } from './pricing.types';
 const MS_PER_HOUR = 3600000;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
 const DAYS_PER_WEEK = 7;
-const DAYS_PER_MONTH = 30;
 
 @Injectable()
 export class PricingService {

@@ -15,5 +15,4 @@ export interface ListingRates {
   hourlyRate: number | null;
   dailyRate: number | null;
   weeklyRate: number | null;
-  monthlyRate: number | null;
 }

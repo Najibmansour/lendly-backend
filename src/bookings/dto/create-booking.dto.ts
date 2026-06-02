@@ -15,7 +15,7 @@ export class CreateBookingDto {
   @IsDateString()
   endAt!: string;
 
-  @ApiPropertyOptional({ enum: ['AUTO', 'HOUR', 'DAY', 'WEEK', 'MONTH'] })
+  @ApiPropertyOptional({ enum: ['AUTO', 'HOUR', 'DAY', 'WEEK'] })
   @IsOptional()
   @IsEnum(UNIT_PREFERENCE_VALUES)
   unitPreference?: (typeof UNIT_PREFERENCE_VALUES)[number];

@@ -7,6 +7,7 @@ import { AuthService } from './auth/auth.service';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableShutdownHooks();
+  
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -14,6 +15,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  
   const config = new DocumentBuilder()
     .setTitle('Lendly API')
     .setDescription('Lendly backend API')

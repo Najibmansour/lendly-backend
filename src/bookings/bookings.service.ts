@@ -285,6 +285,7 @@ export class BookingsService {
         renter: { select: { id: true, firstName: true, lastName: true } },
       },
     });
+    
     return this.withCompletion(updated);
   }
 
