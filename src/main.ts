@@ -54,7 +54,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  writeFileSync('./openapi.json', JSON.stringify(document, null, 2));
+  // writeFileSync('./openapi.json', JSON.stringify(document, null, 2));
 
   if (process.env.NODE_ENV !== 'production') {
     SwaggerModule.setup('api', app, document);
