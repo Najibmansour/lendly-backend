@@ -1,2 +1,1 @@
-# Terms of Service
-This is the legal text...
+The term TOS commonly refers to Terms of Service in business contexts or Table of Specifications in educational settings, with distinct examples for each.

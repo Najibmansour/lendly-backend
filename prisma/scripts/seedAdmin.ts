@@ -1,6 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
+const datasourceUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
+if (datasourceUrl) {
+  process.env.DATABASE_URL = datasourceUrl;
+}
+
 const prisma = new PrismaClient();
 
 async function main() {

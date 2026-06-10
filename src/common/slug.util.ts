@@ -7,25 +7,30 @@
  */
 export function generateSlug(text: string): string {
   if (!text) return '';
-  
-  return text
-    .toLowerCase()
-    .trim()
-    // Replace special characters and spaces with hyphens
-    .replace(/[^\w\s-]/g, '')
-    // Replace spaces with hyphens
-    .replace(/\s+/g, '-')
-    // Collapse multiple hyphens
-    .replace(/-+/g, '-')
-    // Remove leading/trailing hyphens
-    .replace(/^-+|-+$/g, '');
+
+  return (
+    text
+      .toLowerCase()
+      .trim()
+      // Replace special characters and spaces with hyphens
+      .replace(/[^\w\s-]/g, '')
+      // Replace spaces with hyphens
+      .replace(/\s+/g, '-')
+      // Collapse multiple hyphens
+      .replace(/-+/g, '-')
+      // Remove leading/trailing hyphens
+      .replace(/^-+|-+$/g, '')
+  );
 }
 
 /**
  * Generates a unique slug by appending a number suffix if needed.
  * Used when a slug already exists in the database.
  */
-export function generateUniqueSlug(baseSlug: string, existingSlugs: Set<string>): string {
+export function generateUniqueSlug(
+  baseSlug: string,
+  existingSlugs: Set<string>,
+): string {
   if (!existingSlugs.has(baseSlug)) {
     return baseSlug;
   }

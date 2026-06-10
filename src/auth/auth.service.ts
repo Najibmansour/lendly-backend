@@ -105,8 +105,12 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthTokens> {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email.toLowerCase() },
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: dto.email.toLowerCase(),
+        deletedAt: null,
+        anonymizedAt: null,
+      },
     });
     if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
       throw new UnauthorizedException('Invalid email or password');
@@ -122,6 +126,10 @@ export class AuthService {
     });
     if (!session || session.revokedAt || session.userId !== payload.sub) {
       throw new UnauthorizedException('Invalid or revoked session');
+    }
+    if (session.user.deletedAt || session.user.anonymizedAt) {
+      await this.revokeSession(session.id);
+      throw new UnauthorizedException('User account no longer active');
     }
     if (!(await bcrypt.compare(refreshToken, session.refreshTokenHash))) {
       await this.revokeSession(session.id);

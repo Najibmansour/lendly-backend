@@ -6,15 +6,34 @@ import crypto from "crypto";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 
+function getRequiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
 
-const connectionString = `${process.env.DATABASE_URL}`;
-const pool = new Pool({ connectionString });
+const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error('Missing required environment variable: DATABASE_URL or DIRECT_URL');
+}
+
+const pool = new Pool({
+  connectionString,
+  max: 1,
+  idleTimeoutMillis: 10000,
+  connectionTimeoutMillis: 5000,
+});
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
-  adapter
+  adapter,
 });
-const adminPassword = process.env.ADMIN_PASSWORD!;
+
+const adminPassword = getRequiredEnv('ADMIN_PASSWORD');
+if (adminPassword.length < 16) {
+  throw new Error('ADMIN_PASSWORD must be at least 16 characters for security');
+}
 
 function fileChecksum(content: string) {
   return crypto.createHash("sha256").update(content).digest("hex");
@@ -41,13 +60,15 @@ async function main() {
   // 2. Create Admin user FIRST (needed for createdById)
   // ======================================================
 
-  const hashedPassword = await bcrypt.hash("test_pass", 10);
+  const hashedPassword = await bcrypt.hash(adminPassword, 12);
 
   const admin = await prisma.user.upsert({
     where: {
       email: "admin_lendly_xDqo",
     },
-    update: {},
+    update: {
+      passwordHash: hashedPassword,
+    },
     create: {
       email: "admin_lendly_xDqo",
       passwordHash: hashedPassword,

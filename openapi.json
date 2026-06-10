@@ -1,0 +1,2292 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/v1/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Register a new user",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Refresh access token",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Logout (revoke refresh session)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user (requires JWT)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/password/request": {
+      "post": {
+        "operationId": "AuthController_requestPasswordReset",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestPasswordResetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Request password reset (no account enumeration)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/password/confirm": {
+      "post": {
+        "operationId": "AuthController_confirmPasswordReset",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmPasswordResetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Confirm password reset with token",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/users/me": {
+      "patch": {
+        "operationId": "UsersController_updateMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update current user profile",
+        "tags": [
+          "users"
+        ]
+      },
+      "get": {
+        "operationId": "UsersController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user profile",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/v1/users/me/data": {
+      "get": {
+        "operationId": "UsersController_getMyData",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user personal data",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/v1/users/me/delete-request": {
+      "post": {
+        "operationId": "UsersController_requestDeletion",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Request account deletion",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/v1/users/me/tos-agreement-latest": {
+      "get": {
+        "operationId": "UsersController_getMyLatestTosAgreement",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user latest TOS agreement",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/v1/users/{id}/tos-agreements": {
+      "get": {
+        "operationId": "UsersController_getUserTosAgreements",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a user TOS agreement audit trail (admin only)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/v1/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get user by ID (public: id, name, createdAt)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/v1/admin/users/{id}/anonymize": {
+      "post": {
+        "operationId": "AdminUsersController_anonymize",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Anonymize another user account (admin only)",
+        "tags": [
+          "admin-users"
+        ]
+      }
+    },
+    "/v1/tos/current": {
+      "get": {
+        "operationId": "TosController_getCurrent",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get current active Terms of Service",
+        "tags": [
+          "tos"
+        ]
+      }
+    },
+    "/v1/tos/{version}": {
+      "get": {
+        "operationId": "TosController_getVersion",
+        "parameters": [
+          {
+            "name": "version",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get a specific Terms of Service version",
+        "tags": [
+          "tos"
+        ]
+      }
+    },
+    "/v1/tos": {
+      "post": {
+        "operationId": "TosController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTosDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new Terms of Service version (admin only)",
+        "tags": [
+          "tos"
+        ]
+      }
+    },
+    "/v1/legal/privacy": {
+      "get": {
+        "operationId": "LegalController_getPrivacy",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get the privacy policy",
+        "tags": [
+          "legal"
+        ]
+      }
+    },
+    "/v1/legal/terms": {
+      "get": {
+        "operationId": "LegalController_getTerms",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get the terms of service",
+        "tags": [
+          "legal"
+        ]
+      }
+    },
+    "/v1/legal/retention": {
+      "get": {
+        "operationId": "LegalController_getRetention",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get the data retention policy",
+        "tags": [
+          "legal"
+        ]
+      }
+    },
+    "/v1/legal/versions": {
+      "get": {
+        "operationId": "LegalController_getVersions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get available legal document versions",
+        "tags": [
+          "legal"
+        ]
+      }
+    },
+    "/v1/categories": {
+      "get": {
+        "operationId": "CategoriesController_getPublicCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all active categories",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/v1/categories/{slug}": {
+      "get": {
+        "operationId": "CategoriesController_getCategoryBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get category by slug",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/v1/admin/categories": {
+      "post": {
+        "operationId": "CategoriesController_createCategory",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a category (admin only)",
+        "tags": [
+          "categories"
+        ]
+      },
+      "get": {
+        "operationId": "CategoriesController_listCategories",
+        "parameters": [
+          {
+            "name": "includeInactive",
+            "required": false,
+            "in": "query",
+            "description": "Include inactive categories",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by name or description",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all categories with filters (admin only)",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/v1/admin/categories/{id}": {
+      "get": {
+        "operationId": "CategoriesController_getCategoryById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get category by ID (admin only)",
+        "tags": [
+          "categories"
+        ]
+      },
+      "patch": {
+        "operationId": "CategoriesController_updateCategory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update category (admin only)",
+        "tags": [
+          "categories"
+        ]
+      },
+      "delete": {
+        "operationId": "CategoriesController_deleteCategory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete/disable category (admin only)",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/v1/taxonomy": {
+      "get": {
+        "operationId": "TaxonomyController_getTaxonomy",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get combined categories and tags for mobile app (public, cached)",
+        "tags": [
+          "taxonomy"
+        ]
+      }
+    },
+    "/v1/tags": {
+      "get": {
+        "operationId": "TagsController_getPublicTags",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all active tags",
+        "tags": [
+          "tags"
+        ]
+      }
+    },
+    "/v1/admin/tags": {
+      "post": {
+        "operationId": "TagsController_createTag",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTagDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a tag (admin only)",
+        "tags": [
+          "tags"
+        ]
+      },
+      "get": {
+        "operationId": "TagsController_listTags",
+        "parameters": [
+          {
+            "name": "includeInactive",
+            "required": false,
+            "in": "query",
+            "description": "Include inactive tags",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by name or description",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all tags with filters (admin only)",
+        "tags": [
+          "tags"
+        ]
+      }
+    },
+    "/v1/admin/tags/{id}": {
+      "get": {
+        "operationId": "TagsController_getTagById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get tag by ID (admin only)",
+        "tags": [
+          "tags"
+        ]
+      },
+      "patch": {
+        "operationId": "TagsController_updateTag",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTagDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update tag (admin only)",
+        "tags": [
+          "tags"
+        ]
+      },
+      "delete": {
+        "operationId": "TagsController_deleteTag",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete/disable tag (admin only)",
+        "tags": [
+          "tags"
+        ]
+      }
+    },
+    "/v1/listings": {
+      "post": {
+        "operationId": "ListingsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateListingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a listing (JWT)",
+        "tags": [
+          "listings"
+        ]
+      },
+      "get": {
+        "operationId": "ListingsController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search in title/description",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "bikes",
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "Berlin",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "newest",
+              "type": "string",
+              "enum": [
+                "newest",
+                "price"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List listings (excludes DELETED). sort=price: in-memory sort; pagination for price is over fetched set.",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/v1/listings/{id}/availability/calendar": {
+      "get": {
+        "operationId": "ListingsController_getAvailabilityCalendar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startAt",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-05-01T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endAt",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-05-08T00:00:00.000Z",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get daily availability calendar for a listing",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/v1/listings/{id}/availability": {
+      "get": {
+        "operationId": "ListingsController_getAvailability",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get availability blocks for a listing",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/v1/listings/{id}/availability/blocks": {
+      "post": {
+        "operationId": "ListingsController_createAvailabilityBlock",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAvailabilityBlockDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add availability block (owner only)",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/v1/listings/{id}/availability/blocks/{blockId}": {
+      "delete": {
+        "operationId": "ListingsController_deleteAvailabilityBlock",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "blockId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete availability block (owner only)",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/v1/listings/nearby": {
+      "get": {
+        "operationId": "ListingsController_findNearby",
+        "parameters": [
+          {
+            "name": "lat",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "lng",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List nearby listings (future radius filtering)",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/v1/listings/{id}": {
+      "get": {
+        "operationId": "ListingsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get listing by ID",
+        "tags": [
+          "listings"
+        ]
+      },
+      "patch": {
+        "operationId": "ListingsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateListingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update listing (owner only)",
+        "tags": [
+          "listings"
+        ]
+      },
+      "delete": {
+        "operationId": "ListingsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete listing (owner only; sets status=DELETED)",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/v1/home": {
+      "get": {
+        "operationId": "HomeController_getHome",
+        "parameters": [
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "description": "City to filter homepage content",
+            "schema": {
+              "example": "Paris",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limitPerSection",
+            "required": false,
+            "in": "query",
+            "description": "Max items per section",
+            "schema": {
+              "maximum": 20,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get homepage data (categories, banners, sections)",
+        "tags": [
+          "home"
+        ]
+      }
+    },
+    "/v1/quotes": {
+      "post": {
+        "operationId": "QuotesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuoteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Get a price quote for a listing and date range",
+        "tags": [
+          "quotes"
+        ]
+      }
+    },
+    "/v1/bookings": {
+      "post": {
+        "operationId": "BookingsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBookingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a booking (JWT)",
+        "tags": [
+          "bookings"
+        ]
+      },
+      "get": {
+        "operationId": "BookingsController_findAll",
+        "parameters": [
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "renter",
+              "type": "string",
+              "enum": [
+                "renter",
+                "owner"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List my bookings; role=renter|owner",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/bookings/{id}/payment": {
+      "post": {
+        "operationId": "BookingsController_updatePayment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBookingPaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update booking payment/hold info (renter only)",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/bookings/{id}": {
+      "get": {
+        "operationId": "BookingsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get booking by ID (renter or owner only)",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/bookings/{id}/accept": {
+      "post": {
+        "operationId": "BookingsController_accept",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Accept booking (owner only)",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/bookings/{id}/decline": {
+      "post": {
+        "operationId": "BookingsController_decline",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Decline booking (owner only)",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/bookings/{id}/cancel": {
+      "post": {
+        "operationId": "BookingsController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel booking (renter only)",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/bookings/{id}/complete": {
+      "post": {
+        "operationId": "BookingsController_complete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteBookingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark booking completion as renter or owner",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/bookings/{id}/issues": {
+      "post": {
+        "operationId": "BookingsController_createIssue",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBookingIssueDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create booking issue report (participant only)",
+        "tags": [
+          "bookings"
+        ]
+      },
+      "get": {
+        "operationId": "BookingsController_getIssues",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List booking issues (participant only)",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/api/upload-url": {
+      "post": {
+        "description": "Returns a signed URL for uploading files directly to R2 storage, plus a public URL for storing in the database",
+        "operationId": "UploadController_generateUploadUrl",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateUploadUrlDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Presigned URLs generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "signedUrl": "https://your-bucket.r2.cloudflarestorage.com/...",
+                    "publicUrl": "https://cdn.yourdomain.com/image/123456.jpg",
+                    "key": "image/123456-abc123.jpg"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Generate presigned URL for direct cloud upload",
+        "tags": [
+          "Upload"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Lendly API",
+    "description": "Lendly backend API",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+15551234567"
+          },
+          "password": {
+            "type": "string",
+            "example": "securePassword123",
+            "minLength": 6
+          },
+          "acceptTerms": {
+            "type": "boolean",
+            "example": true
+          },
+          "acceptPrivacy": {
+            "type": "boolean",
+            "example": true
+          },
+          "tosLocale": {
+            "type": "string",
+            "example": "en"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "email",
+          "phone",
+          "password",
+          "acceptTerms",
+          "acceptPrivacy"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "securePassword123"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "RefreshDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh token"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "LogoutDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh token to revoke"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "RequestPasswordResetDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ConfirmPasswordResetDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateMeDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          }
+        }
+      },
+      "CreateTosDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "en",
+            "description": "Locale code for the TOS document"
+          },
+          "content": {
+            "type": "string",
+            "example": "# Terms of Service\nThis is the legal text...",
+            "description": "Markdown content of the Terms of Service"
+          },
+          "requiresReacceptance": {
+            "type": "boolean",
+            "example": false,
+            "description": "Whether this version requires users to re-accept in the future"
+          }
+        },
+        "required": [
+          "locale",
+          "content"
+        ]
+      },
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Tools & DIY",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "description": {
+            "type": "string",
+            "example": "Tools, power tools, and DIY equipment for rent"
+          },
+          "icon": {
+            "type": "string",
+            "example": "🔧"
+          },
+          "color": {
+            "type": "string",
+            "example": "#F59E0B",
+            "description": "Hex color code"
+          },
+          "sortOrder": {
+            "type": "number",
+            "example": 1,
+            "default": 0
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true,
+            "default": true
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Tools & DIY"
+          },
+          "description": {
+            "type": "string",
+            "example": "Tools, power tools, and DIY equipment for rent"
+          },
+          "icon": {
+            "type": "string",
+            "example": "🔧"
+          },
+          "color": {
+            "type": "string",
+            "example": "#F59E0B"
+          },
+          "sortOrder": {
+            "type": "number",
+            "example": 1
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "CreateTagDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Outdoor",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "description": {
+            "type": "string",
+            "example": "Items mostly used outside"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true,
+            "default": true
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateTagDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Outdoor"
+          },
+          "description": {
+            "type": "string",
+            "example": "Items mostly used outside"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "CreateListingDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Road bike"
+          },
+          "description": {
+            "type": "string",
+            "example": "Great condition road bike for weekend rides."
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "uuid-of-category-id",
+            "description": "Category UUID"
+          },
+          "city": {
+            "type": "string",
+            "example": "Berlin"
+          },
+          "latitude": {
+            "type": "number",
+            "example": 52.520008
+          },
+          "longitude": {
+            "type": "number",
+            "example": 13.404954
+          },
+          "address": {
+            "type": "string",
+            "example": "Mitte, Berlin, Germany"
+          },
+          "condition": {
+            "type": "string",
+            "example": "Like New"
+          },
+          "tagIds": {
+            "example": [
+              "uuid-tag-1",
+              "uuid-tag-2"
+            ],
+            "description": "Array of tag UUIDs (max 5)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "images": {
+            "example": [
+              "https://example.com/image-1.jpg",
+              "https://example.com/image-2.jpg"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "imageUrl": {
+            "type": "string",
+            "example": "https://example.com/image.jpg"
+          },
+          "hourlyRate": {
+            "type": "number",
+            "example": 10
+          },
+          "dailyRate": {
+            "type": "number",
+            "example": 50
+          },
+          "weeklyRate": {
+            "type": "number",
+            "example": 280
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "categoryId",
+          "latitude",
+          "longitude",
+          "address",
+          "images"
+        ]
+      },
+      "CreateAvailabilityBlockDto": {
+        "type": "object",
+        "properties": {
+          "startAt": {
+            "type": "string",
+            "example": "2025-03-01T00:00:00.000Z"
+          },
+          "endAt": {
+            "type": "string",
+            "example": "2025-03-02T00:00:00.000Z"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Maintenance"
+          }
+        },
+        "required": [
+          "startAt",
+          "endAt"
+        ]
+      },
+      "UpdateListingDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Road bike"
+          },
+          "description": {
+            "type": "string",
+            "example": "Great condition road bike for weekend rides."
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "uuid-of-category-id"
+          },
+          "city": {
+            "type": "string",
+            "example": "Berlin"
+          },
+          "latitude": {
+            "type": "number",
+            "example": 52.520008
+          },
+          "longitude": {
+            "type": "number",
+            "example": 13.404954
+          },
+          "address": {
+            "type": "string",
+            "example": "Mitte, Berlin, Germany"
+          },
+          "condition": {
+            "type": "string",
+            "example": "Like New"
+          },
+          "tagIds": {
+            "example": [
+              "uuid-tag-1",
+              "uuid-tag-2"
+            ],
+            "description": "Array of tag UUIDs (max 5)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "images": {
+            "example": [
+              "https://example.com/image-1.jpg"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "imageUrl": {
+            "type": "string",
+            "example": "https://example.com/image.jpg"
+          },
+          "hourlyRate": {
+            "type": "number",
+            "example": 10
+          },
+          "dailyRate": {
+            "type": "number",
+            "example": 50
+          },
+          "weeklyRate": {
+            "type": "number",
+            "example": 280
+          }
+        }
+      },
+      "CreateQuoteDto": {
+        "type": "object",
+        "properties": {
+          "listingId": {
+            "type": "string"
+          },
+          "startAt": {
+            "type": "string",
+            "example": "2025-03-01T10:00:00.000Z"
+          },
+          "endAt": {
+            "type": "string",
+            "example": "2025-03-03T10:00:00.000Z"
+          },
+          "unitPreference": {
+            "type": "string",
+            "enum": [
+              "AUTO",
+              "HOUR",
+              "DAY",
+              "WEEK"
+            ],
+            "default": "AUTO"
+          }
+        },
+        "required": [
+          "listingId",
+          "startAt",
+          "endAt"
+        ]
+      },
+      "CreateBookingDto": {
+        "type": "object",
+        "properties": {
+          "listingId": {
+            "type": "string"
+          },
+          "startAt": {
+            "type": "string",
+            "example": "2025-03-01T10:00:00.000Z"
+          },
+          "endAt": {
+            "type": "string",
+            "example": "2025-03-03T10:00:00.000Z"
+          },
+          "unitPreference": {
+            "type": "string",
+            "enum": [
+              "AUTO",
+              "HOUR",
+              "DAY",
+              "WEEK"
+            ]
+          }
+        },
+        "required": [
+          "listingId",
+          "startAt",
+          "endAt"
+        ]
+      },
+      "UpdateBookingPaymentDto": {
+        "type": "object",
+        "properties": {
+          "paymentStatus": {
+            "type": "string",
+            "enum": [
+              "UNPAID",
+              "HOLD",
+              "PAID",
+              "FAILED"
+            ]
+          },
+          "depositAmount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "paymentReference": {
+            "type": "string"
+          }
+        }
+      },
+      "CompleteBookingDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateBookingIssueDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "GenerateUploadUrlDto": {
+        "type": "object",
+        "properties": {
+          "fileType": {
+            "type": "string",
+            "example": "image",
+            "enum": [
+              "image",
+              "video",
+              "document"
+            ],
+            "description": "Type of file being uploaded"
+          },
+          "extension": {
+            "type": "string",
+            "example": "jpg",
+            "description": "File extension (without dot)"
+          },
+          "folder": {
+            "type": "string",
+            "example": "listing-photos",
+            "description": "Optional subfolder path"
+          }
+        },
+        "required": [
+          "fileType"
+        ]
+      }
+    }
+  }
+}

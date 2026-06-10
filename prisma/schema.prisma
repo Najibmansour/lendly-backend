@@ -6,11 +6,288 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id                  String           @id @default(uuid())
+  email               String           @unique
+  passwordHash        String
+  phone               String?          @unique
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  firstName           String
+  lastName            String
+  acceptedTosId       String?
+  role                UserRole         @default(USER)
+  anonymizedAt        DateTime?
+  consentIp           String?
+  consentUserAgent    String?
+  consentVersion      String?
+  deletedAt           DateTime?
+  deletionRequestedAt DateTime?
+  privacyAcceptedAt   DateTime?
+  termsAcceptedAt     DateTime?
+  bookingIssues       BookingIssue[]
+  ownerBookings       Booking[]        @relation("Owner")
+  renterBookings      Booking[]        @relation("Renter")
+  categoriesCreated   Category[]       @relation("CategoryCreatedBy")
+  categoriesUpdated   Category[]       @relation("CategoryUpdatedBy")
+  listings            Listing[]
+  sessions            Session[]
+  adminAuditLogs      AdminAuditLog[]
+  passwordResetTokens PasswordResetToken[]
+  tagsCreated         Tag[]            @relation("TagCreatedBy")
+  tagsUpdated         Tag[]            @relation("TagUpdatedBy")
+  createdTosVersions  TermsOfService[] @relation("CreatedTos")
+  tosAgreements       TosAgreement[]
+  acceptedTos         TermsOfService?  @relation("AcceptedTos", fields: [acceptedTosId], references: [id])
+
+  @@map("users")
+}
+
+model Session {
+  id               String    @id @default(uuid())
+  userId           String
+  refreshTokenHash String
+  revokedAt        DateTime?
+  userAgent        String?
+  ip               String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model TermsOfService {
+  id                   String         @id @default(uuid())
+  version              Int
+  filePath             String
+  checksum             String
+  locale               String         @default("en")
+  isActive             Boolean        @default(true)
+  requiresReacceptance Boolean        @default(false)
+  createdById          String
+  publishedAt          DateTime       @default(now())
+  createdBy            User           @relation("CreatedTos", fields: [createdById], references: [id], onDelete: Cascade)
+  agreements           TosAgreement[]
+  acceptedByUsers      User[]         @relation("AcceptedTos")
+
+  @@unique([version, locale])
+  @@index([version, locale])
+  @@map("terms_of_service")
+}
+
+model TosAgreement {
+  id           String         @id @default(uuid())
+  userId       String
+  tosVersionId String
+  agreedAt     DateTime       @default(now())
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime       @default(now())
+  tosVersion   TermsOfService @relation(fields: [tosVersionId], references: [id])
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("tos_agreements")
+}
+
+model Listing {
+  id                 String              @id @default(uuid())
+  ownerId            String
+  title              String
+  description        String
+  category           String?
+  city               String?
+  status             ListingStatus       @default(ACTIVE)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  imageUrl           String?
+  dailyRate          Decimal?
+  hourlyRate         Decimal?
+  weeklyRate         Decimal?
+  address            String
+  condition          String?
+  images             String[]
+  latitude           Float
+  longitude          Float
+  tags               String[]
+  categoryId         String?
+  availabilityBlocks AvailabilityBlock[]
+  bookings           Booking[]
+  listingTags        ListingTag[]
+  category_rel       Category?           @relation(fields: [categoryId], references: [id])
+  owner              User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([category])
+  @@index([categoryId])
+  @@index([city])
+  @@map("listings")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  icon        String?
+  color       String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdById String?
+  updatedById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdBy   User?     @relation("CategoryCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("CategoryUpdatedBy", fields: [updatedById], references: [id])
+  listings    Listing[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("categories")
+}
+
+model Tag {
+  id          String       @id @default(uuid())
+  name        String
+  slug        String       @unique
+  description String?
+  isActive    Boolean      @default(true)
+  createdById String?
+  updatedById String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+  listingTags ListingTag[]
+  createdBy   User?        @relation("TagCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?        @relation("TagUpdatedBy", fields: [updatedById], references: [id])
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("tags")
+}
+
+model AdminAuditLog {
+  id         String   @id @default(uuid())
+  adminId    String
+  action     String
+  targetType String
+  targetId   String?
+  metadata   Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  admin      User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([action])
+  @@map("admin_audit_logs")
+}
+
+model PasswordResetToken {
+  id         String   @id @default(uuid())
+  userId     String
+  tokenHash  String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+  requestIp  String?
+  userAgent  String?
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model ListingTag {
+  id        String   @id @default(uuid())
+  listingId String
+  tagId     String
+  createdAt DateTime @default(now())
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, tagId])
+  @@index([listingId])
+  @@index([tagId])
+  @@map("listing_tags")
+}
+
+model AvailabilityBlock {
+  id        String   @id @default(uuid())
+  listingId String
+  startAt   DateTime
+  endAt     DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+  @@index([startAt, endAt])
+  @@map("availability_blocks")
+}
+
+model Booking {
+  id                String         @id @default(uuid())
+  listingId         String
+  renterId          String
+  ownerId           String
+  startAt           DateTime
+  endAt             DateTime
+  status            BookingStatus  @default(PENDING)
+  pricingUnit       PricingUnit
+  quantity          Int
+  unitRate          Decimal
+  subtotal          Decimal
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  depositAmount     Decimal?
+  expiresAt         DateTime?
+  paymentReference  String?
+  paymentStatus     PaymentStatus  @default(UNPAID)
+  ownerConfirmedAt  DateTime?
+  renterConfirmedAt DateTime?
+  issues            BookingIssue[]
+  listing           Listing        @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  owner             User           @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  renter            User           @relation("Renter", fields: [renterId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+  @@index([renterId])
+  @@index([ownerId])
+  @@index([status])
+  @@index([startAt, endAt])
+  @@map("bookings")
+}
+
+model BookingIssue {
+  id        String   @id @default(uuid())
+  bookingId String
+  authorId  String
+  message   String
+  category  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, createdAt])
+  @@index([authorId])
+  @@map("booking_issues")
+}
+
 enum ListingStatus {
   ACTIVE
   PAUSED
   DELETED
 }
+
 enum BookingStatus {
   PENDING
   CONFIRMED
@@ -36,243 +313,4 @@ enum PricingUnit {
 enum UserRole {
   USER
   ADMIN
-}
-
-model User {
-  id                String           @id @default(uuid())
-  email             String           @unique
-  passwordHash      String
-  firstName         String
-  lastName          String
-  phone             String?          @unique
-  role              UserRole         @default(USER)
-  acceptedTosId     String?
-  acceptedTos       TermsOfService?  @relation("AcceptedTos", fields: [acceptedTosId], references: [id])
-  createdTosVersions TermsOfService[] @relation("CreatedTos")
-  tosAgreements     TosAgreement[]
-  termsAcceptedAt   DateTime?
-  privacyAcceptedAt DateTime?
-  consentVersion    String?
-  consentIp         String?
-  consentUserAgent  String?
-  deletionRequestedAt DateTime?
-  deletedAt         DateTime?
-  anonymizedAt      DateTime?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  sessions          Session[]
-  listings          Listing[]
-  renterBookings    Booking[]        @relation("Renter")
-  ownerBookings     Booking[]        @relation("Owner")
-  bookingIssues     BookingIssue[]
-  categoriesCreated Category[]       @relation("CategoryCreatedBy")
-  categoriesUpdated Category[]       @relation("CategoryUpdatedBy")
-  tagsCreated       Tag[]            @relation("TagCreatedBy")
-  tagsUpdated       Tag[]            @relation("TagUpdatedBy")
-
-  @@map("users")
-}
-
-model Session {
-  id              String    @id @default(uuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  refreshTokenHash String
-  revokedAt       DateTime?
-  userAgent       String?
-  ip              String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  @@index([userId])
-  @@map("sessions")
-}
-
-model TermsOfService {
-  id          String          @id @default(uuid())
-  version               Int
-  filePath              String
-  checksum              String
-  locale                String          @default("en")
-  isActive              Boolean         @default(true)
-  requiresReacceptance  Boolean         @default(false)
-  createdById           String
-  createdBy             User            @relation("CreatedTos", fields: [createdById], references: [id], onDelete: Cascade)
-  acceptedByUsers       User[]          @relation("AcceptedTos")
-  publishedAt DateTime        @default(now())
-  agreements  TosAgreement[]
-
-  @@unique([version, locale])
-  @@index([version, locale])
-  @@map("terms_of_service")
-}
-
-model TosAgreement {
-  id           String          @id @default(uuid())
-  userId       String
-  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tosVersionId String
-  tosVersion   TermsOfService  @relation(fields: [tosVersionId], references: [id], onDelete: Restrict)
-  agreedAt     DateTime        @default(now())
-  ipAddress    String?
-  userAgent    String?
-  createdAt    DateTime        @default(now())
-
-  @@index([userId])
-  @@map("tos_agreements")
-}
-
-model Listing {
-  id                 String    @id @default(uuid())
-  ownerId            String
-  owner              User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  title              String
-  description        String
-  category           String?
-  categoryId         String?
-  category_rel       Category? @relation(fields: [categoryId], references: [id])
-  city               String?
-  latitude           Float
-  longitude          Float
-  address            String
-  condition          String?
-  tags               String[]
-  listingTags        ListingTag[]
-  images             String[]
-  imageUrl           String?
-  hourlyRate         Decimal?
-  dailyRate          Decimal?
-  weeklyRate         Decimal?
-  status             ListingStatus @default(ACTIVE)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  availabilityBlocks AvailabilityBlock[]
-  bookings           Booking[]
-
-  @@index([ownerId])
-  @@index([status])
-  @@index([category])
-  @@index([categoryId])
-  @@index([city])
-  @@map("listings")
-}
-
-model Category {
-  id          String    @id @default(uuid())
-  name        String
-  slug        String    @unique
-  description String?
-  icon        String?
-  color       String?
-  sortOrder   Int       @default(0)
-  isActive    Boolean   @default(true)
-  createdById String?
-  createdBy   User?     @relation("CategoryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  updatedById String?
-  updatedBy   User?     @relation("CategoryUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  listings    Listing[]
-
-  @@index([slug])
-  @@index([isActive])
-  @@map("categories")
-}
-
-model Tag {
-  id          String    @id @default(uuid())
-  name        String
-  slug        String    @unique
-  description String?
-  isActive    Boolean   @default(true)
-  createdById String?
-  createdBy   User?     @relation("TagCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  updatedById String?
-  updatedBy   User?     @relation("TagUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  listingTags ListingTag[]
-
-  @@index([slug])
-  @@index([isActive])
-  @@map("tags")
-}
-
-model ListingTag {
-  id        String   @id @default(uuid())
-  listingId String
-  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  tagId     String
-  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-
-  @@unique([listingId, tagId])
-  @@index([listingId])
-  @@index([tagId])
-  @@map("listing_tags")
-}
-
-model AvailabilityBlock {
-  id        String   @id @default(uuid())
-  listingId String
-  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  startAt   DateTime
-  endAt     DateTime
-  reason    String?
-  createdAt DateTime @default(now())
-
-  @@index([listingId])
-  @@index([startAt, endAt])
-  @@map("availability_blocks")
-}
-
-model Booking {
-  id               String        @id @default(uuid())
-  listingId        String
-  listing          Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  renterId         String
-  renter           User          @relation("Renter", fields: [renterId], references: [id], onDelete: Cascade)
-  ownerId          String
-  owner            User          @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
-  startAt          DateTime
-  endAt            DateTime
-  expiresAt        DateTime?
-  status           BookingStatus @default(PENDING)
-  paymentStatus    PaymentStatus @default(UNPAID)
-  depositAmount    Decimal?
-  paymentReference String?
-  renterConfirmedAt DateTime?
-  ownerConfirmedAt  DateTime?
-  pricingUnit      PricingUnit
-  quantity         Int
-  unitRate         Decimal
-  subtotal         Decimal
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  issues           BookingIssue[]
-
-  @@index([listingId])
-  @@index([renterId])
-  @@index([ownerId])
-  @@index([status])
-  @@index([startAt, endAt])
-  @@map("bookings")
-}
-
-model BookingIssue {
-  id        String   @id @default(uuid())
-  bookingId String
-  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  message   String
-  category  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([bookingId, createdAt])
-  @@index([authorId])
-  @@map("booking_issues")
 }

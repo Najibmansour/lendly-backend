@@ -36,10 +36,7 @@ export class TagsController {
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a tag (admin only)' })
-  async createTag(
-    @CurrentUser() user: JwtUser,
-    @Body() dto: CreateTagDto,
-  ) {
+  async createTag(@CurrentUser() user: JwtUser, @Body() dto: CreateTagDto) {
     return this.tagsService.create(dto, user.id);
   }
 

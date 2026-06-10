@@ -22,10 +22,26 @@ cp .env.example .env
 
 Required in `.env`:
 
-- `DATABASE_URL` — Postgres connection string (e.g. `postgresql://user:password@localhost:5432/lendly`)
+- `DATABASE_URL` — runtime database connection string used by the app.
+  - This should be a pooled URL when using PgBouncer or a managed Postgres pooler.
+- `DIRECT_URL` — direct database URL used by Prisma migrations and CLI tools.
+  - For local dev or no pooler, this may be the same as `DATABASE_URL`.
 - `JWT_ACCESS_SECRET` — secret for access tokens (min 32 chars)
 - `JWT_REFRESH_SECRET` — secret for refresh tokens (min 32 chars)
-- Optional: `JWT_ACCESS_EXPIRES_IN` (default `15m`), `JWT_REFRESH_EXPIRES_IN` (default `30d`), `PORT` (default `3000`)
+
+Optional:
+
+- `DATABASE_MAX_CONNECTIONS` — app pool limit, default `5`.
+- `JWT_ACCESS_EXPIRES_IN` (default `15m`)
+- `JWT_REFRESH_EXPIRES_IN` (default `30d`)
+- `PORT` (default `3000`)
+
+#### Pooling notes
+
+- Use `DATABASE_URL` for the runtime Prisma client.
+- Use `DIRECT_URL` for migrations and CLI operations if your runtime URL is a pooled endpoint.
+- Keep `DATABASE_MAX_CONNECTIONS` low to avoid high connection counts in launch environments.
+- If you are not using an external pooler, set `DIRECT_URL` equal to `DATABASE_URL`.
 
 ### 3. Database (Docker, optional)
 
@@ -38,7 +54,9 @@ docker compose up -d
 Default compose uses user `lendly`, password `lendly`, database `lendly` on port `5432`. Set:
 
 ```env
-DATABASE_URL="postgresql://lendly:lendly@localhost:5432/lendly"
+DATABASE_URL="postgresql://lendly:lendly@localhost:5432/lendly?schema=public"
+DIRECT_URL="postgresql://lendly:lendly@localhost:5432/lendly?schema=public"
+DATABASE_MAX_CONNECTIONS=5
 ```
 
 ### 4. Migrations

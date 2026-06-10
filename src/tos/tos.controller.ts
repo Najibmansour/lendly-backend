@@ -43,7 +43,6 @@ export class TosController {
     summary: 'Create a new Terms of Service version (admin only)',
   })
   create(@Body() dto: CreateTosDto, @CurrentUser() user: JwtUser) {
-   
     return this.tosService.createTosVersion(dto, user.id);
   }
 }

@@ -189,9 +189,7 @@ export class CategoriesService {
       });
 
       if (!otherActive) {
-        throw new BadRequestException(
-          'Cannot delete the last active category',
-        );
+        throw new BadRequestException('Cannot delete the last active category');
       }
     }
 

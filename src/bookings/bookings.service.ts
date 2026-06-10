@@ -43,6 +43,9 @@ export class BookingsService {
     if (!listing) {
       throw new NotFoundException('Listing not found');
     }
+    if (listing.ownerId === renterId) {
+      throw new BadRequestException('Cannot book your own listing');
+    }
     if (listing.status !== ListingStatus.ACTIVE) {
       throw new BadRequestException('Listing is not available for booking');
     }
@@ -114,7 +117,7 @@ export class BookingsService {
         },
         renter: {
           select: { id: true, firstName: true, lastName: true, phone: true },
-         
+
           // select: { id: true, firstName: true, lastName: true },
         },
       },
@@ -285,7 +288,7 @@ export class BookingsService {
         renter: { select: { id: true, firstName: true, lastName: true } },
       },
     });
-    
+
     return this.withCompletion(updated);
   }
 
@@ -475,7 +478,7 @@ export class BookingsService {
     endAt: Date,
     excludeBookingId: string | null,
   ): Promise<void> {
-    const [blocks, confirmed] = await Promise.all([
+    const [blocks, confirmed, pending] = await Promise.all([
       this.prisma.availabilityBlock.findMany({
         where: { listingId },
       }),
@@ -483,6 +486,13 @@ export class BookingsService {
         where: {
           listingId,
           status: BookingStatus.CONFIRMED,
+          ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
+        },
+      }),
+      this.prisma.booking.findMany({
+        where: {
+          listingId,
+          status: BookingStatus.PENDING,
           ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
         },
       }),
@@ -501,6 +511,13 @@ export class BookingsService {
         );
       }
     }
+    for (const b of pending) {
+      if (overlaps(startAt, endAt, b.startAt, b.endAt)) {
+        throw new BadRequestException(
+          'Requested dates overlap with a pending booking',
+        );
+      }
+    }
   }
 
   private async checkAvailabilityTx(
@@ -510,12 +527,19 @@ export class BookingsService {
     endAt: Date,
     excludeBookingId: string,
   ): Promise<void> {
-    const [blocks, confirmed] = await Promise.all([
+    const [blocks, confirmed, pending] = await Promise.all([
       tx.availabilityBlock.findMany({ where: { listingId } }),
       tx.booking.findMany({
         where: {
           listingId,
           status: BookingStatus.CONFIRMED,
+          id: { not: excludeBookingId },
+        },
+      }),
+      tx.booking.findMany({
+        where: {
+          listingId,
+          status: BookingStatus.PENDING,
           id: { not: excludeBookingId },
         },
       }),
@@ -531,6 +555,13 @@ export class BookingsService {
       if (overlaps(startAt, endAt, b.startAt, b.endAt)) {
         throw new BadRequestException(
           'Dates overlap with a confirmed booking; no longer available',
+        );
+      }
+    }
+    for (const b of pending) {
+      if (overlaps(startAt, endAt, b.startAt, b.endAt)) {
+        throw new BadRequestException(
+          'Dates overlap with a pending booking; no longer available',
         );
       }
     }

@@ -7,6 +7,7 @@ import {
   IsString,
   IsUrl,
   Min,
+  Max,
   MinLength,
   IsUUID,
 } from 'class-validator';
@@ -41,11 +42,15 @@ export class UpdateListingDto {
   @ApiPropertyOptional({ example: 52.520008 })
   @IsOptional()
   @IsNumber()
+  @Min(-90)
+  @Max(90)
   latitude?: number;
 
   @ApiPropertyOptional({ example: 13.404954 })
   @IsOptional()
   @IsNumber()
+  @Min(-180)
+  @Max(180)
   longitude?: number;
 
   @ApiPropertyOptional({ example: 'Mitte, Berlin, Germany' })
@@ -75,6 +80,7 @@ export class UpdateListingDto {
   @IsArray()
   @ArrayNotEmpty()
   @IsString({ each: true })
+  @IsUrl({}, { each: true })
   images?: string[];
 
   @ApiPropertyOptional({ example: 'https://example.com/image.jpg' })

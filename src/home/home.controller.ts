@@ -9,7 +9,9 @@ export class HomeController {
   constructor(private readonly homeService: HomeService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get homepage data (categories, banners, sections)' })
+  @ApiOperation({
+    summary: 'Get homepage data (categories, banners, sections)',
+  })
   async getHome(@Query() query: HomeQueryDto) {
     return this.homeService.getHome(query);
   }

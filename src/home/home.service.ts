@@ -8,9 +8,11 @@ const PRICE_SORT_FETCH_LIMIT = 1000;
 
 function minAvailableRate(listing: any): number | null {
   const toN = (v: unknown) => (v != null ? Number(v) : NaN);
-  const nums = [toN(listing.hourlyRate), toN(listing.dailyRate), toN(listing.weeklyRate)].filter(
-    (n) => !Number.isNaN(n) && n >= 0,
-  );
+  const nums = [
+    toN(listing.hourlyRate),
+    toN(listing.dailyRate),
+    toN(listing.weeklyRate),
+  ].filter((n) => !Number.isNaN(n) && n >= 0);
   return nums.length > 0 ? Math.min(...nums) : null;
 }
 
@@ -20,11 +22,15 @@ function overlaps(startA: Date, endA: Date, startB: Date, endB: Date): boolean {
 
 @Injectable()
 export class HomeService {
-  constructor(private readonly prisma: PrismaService, private readonly listingsService: ListingsService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly listingsService: ListingsService,
+  ) {}
 
   private mapListingToHomeCard(listing: any) {
     const minRate = minAvailableRate(listing);
-    const mainImage = listing.imageUrl ?? (listing.images && listing.images[0]) ?? null;
+    const mainImage =
+      listing.imageUrl ?? (listing.images && listing.images[0]) ?? null;
     return {
       id: listing.id,
       title: listing.title,
@@ -37,7 +43,13 @@ export class HomeService {
       hourlyRate: listing.hourlyRate ?? null,
       dailyRate: listing.dailyRate ?? null,
       weeklyRate: listing.weeklyRate ?? null,
-      owner: listing.owner ? { id: listing.owner.id, firstName: listing.owner.firstName, lastName: listing.owner.lastName } : null,
+      owner: listing.owner
+        ? {
+            id: listing.owner.id,
+            firstName: listing.owner.firstName,
+            lastName: listing.owner.lastName,
+          }
+        : null,
       createdAt: listing.createdAt,
     };
   }
@@ -79,7 +91,9 @@ export class HomeService {
       where,
       orderBy: { createdAt: 'desc' },
       take: limit,
-      include: { owner: { select: { id: true, firstName: true, lastName: true } } },
+      include: {
+        owner: { select: { id: true, firstName: true, lastName: true } },
+      },
     });
     return listings.map((l) => this.mapListingToHomeCard(l));
   }
@@ -88,23 +102,46 @@ export class HomeService {
     const where: any = { status: { not: ListingStatus.DELETED } };
     if (city) where.city = city;
     // require at least one rate
-    where.OR = [{ hourlyRate: { not: null } }, { dailyRate: { not: null } }, { weeklyRate: { not: null } }];
-    const all = await this.prisma.listing.findMany({ where, take: PRICE_SORT_FETCH_LIMIT, include: { owner: { select: { id: true, firstName: true, lastName: true } } } });
+    where.OR = [
+      { hourlyRate: { not: null } },
+      { dailyRate: { not: null } },
+      { weeklyRate: { not: null } },
+    ];
+    const all = await this.prisma.listing.findMany({
+      where,
+      take: PRICE_SORT_FETCH_LIMIT,
+      include: {
+        owner: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
     const withMin = all
       .map((l) => ({ listing: l, minRate: minAvailableRate(l) }))
-      .filter((x) => x.minRate != null) as Array<{ listing: any; minRate: number }>;
+      .filter((x) => x.minRate != null) as Array<{
+      listing: any;
+      minRate: number;
+    }>;
     withMin.sort((a, b) => a.minRate - b.minRate);
-    return withMin.slice(0, limit).map((x) => this.mapListingToHomeCard(x.listing));
+    return withMin
+      .slice(0, limit)
+      .map((x) => this.mapListingToHomeCard(x.listing));
   }
 
   private normalizeDayRange(date: Date) {
-    return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    return new Date(
+      Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+    );
   }
 
-  private async isListingAvailableBetween(listingId: string, startAt: Date, endAt: Date) {
+  private async isListingAvailableBetween(
+    listingId: string,
+    startAt: Date,
+    endAt: Date,
+  ) {
     const [blocks, bookings] = await Promise.all([
       this.prisma.availabilityBlock.findMany({ where: { listingId } }),
-      this.prisma.booking.findMany({ where: { listingId, status: BookingStatus.CONFIRMED } }),
+      this.prisma.booking.findMany({
+        where: { listingId, status: BookingStatus.CONFIRMED },
+      }),
     ]);
     for (const b of blocks) {
       if (overlaps(startAt, endAt, b.startAt, b.endAt)) return false;
@@ -122,14 +159,20 @@ export class HomeService {
       where,
       orderBy: { createdAt: 'desc' },
       take: 100,
-      include: { owner: { select: { id: true, firstName: true, lastName: true } } },
+      include: {
+        owner: { select: { id: true, firstName: true, lastName: true } },
+      },
     });
     const todayStart = this.normalizeDayRange(new Date());
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
     const results: any[] = [];
     for (const c of candidates) {
       if (results.length >= limit) break;
-      const ok = await this.isListingAvailableBetween(c.id, todayStart, todayEnd);
+      const ok = await this.isListingAvailableBetween(
+        c.id,
+        todayStart,
+        todayEnd,
+      );
       if (ok) results.push(this.mapListingToHomeCard(c));
     }
     return results;
@@ -140,8 +183,19 @@ export class HomeService {
     if (city) where.city = city;
     where.images = { isEmpty: false } as any;
     // require at least one rate as heuristic
-    where.OR = [{ hourlyRate: { not: null } }, { dailyRate: { not: null } }, { weeklyRate: { not: null } }];
-    const listings = await this.prisma.listing.findMany({ where, orderBy: { updatedAt: 'desc' }, take: limit, include: { owner: { select: { id: true, firstName: true, lastName: true } } } });
+    where.OR = [
+      { hourlyRate: { not: null } },
+      { dailyRate: { not: null } },
+      { weeklyRate: { not: null } },
+    ];
+    const listings = await this.prisma.listing.findMany({
+      where,
+      orderBy: { updatedAt: 'desc' },
+      take: limit,
+      include: {
+        owner: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
     return listings.map((l) => this.mapListingToHomeCard(l));
   }
 
@@ -161,7 +215,14 @@ export class HomeService {
     const city = this.normalizeCity(query.city);
     const limit = query.limitPerSection ?? 10;
 
-    const [banners, categories, recentlyAdded, affordablePicks, popularThisWeek, feedPreview] = await Promise.all([
+    const [
+      banners,
+      categories,
+      recentlyAdded,
+      affordablePicks,
+      popularThisWeek,
+      feedPreview,
+    ] = await Promise.all([
       this.getBanners(),
       this.getCategories(city),
       this.getRecentlyAdded(city, limit),

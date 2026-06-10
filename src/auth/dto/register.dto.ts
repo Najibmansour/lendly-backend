@@ -32,7 +32,6 @@ export class RegisterDto {
   })
   phone!: string;
 
-
   @ApiProperty({ example: 'securePassword123', minLength: 6 })
   @IsString()
   @MinLength(6)

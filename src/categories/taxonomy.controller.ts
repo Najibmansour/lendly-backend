@@ -13,8 +13,7 @@ export class TaxonomyController {
 
   @Get('taxonomy')
   @ApiOperation({
-    summary:
-      'Get combined categories and tags for mobile app (public, cached)',
+    summary: 'Get combined categories and tags for mobile app (public, cached)',
   })
   async getTaxonomy() {
     const [categories, tags] = await Promise.all([

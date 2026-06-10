@@ -116,9 +116,7 @@ export class TagsService {
         where: { slug },
       });
       if (slugExists && slugExists.id !== id) {
-        throw new BadRequestException(
-          `Tag with slug "${slug}" already exists`,
-        );
+        throw new BadRequestException(`Tag with slug "${slug}" already exists`);
       }
     }
 

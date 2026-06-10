@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -16,24 +17,40 @@ import { TosModule } from './tos/tos.module';
 import { LegalModule } from './legal/legal.module';
 import { CategoriesModule } from './categories/categories.module';
 import { TagsModule } from './tags/tags.module';
+import { EmailModule } from './email/email.module';
+import { AdminAuditModule } from './admin-audit/admin-audit.module';
+import { CleanupModule } from './cleanup/cleanup.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          limit: 50,
-          ttl: 60,
-        },
-      ],
+    ConfigModule.forRoot({
+      isGlobal: true,
+      cache: true,
+      validate: (config) => {
+        if (!config.DATABASE_URL) {
+          throw new Error(
+            'Missing required environment variable: DATABASE_URL',
+          );
+        }
+        return config;
+      },
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60,
+        limit: 50,
+      },
+    ]),
+    ScheduleModule.forRoot(),
     PrismaModule,
     PricingModule,
     AuthModule,
     UsersModule,
     TosModule,
     LegalModule,
+    EmailModule,
+    AdminAuditModule,
+    CleanupModule,
     CategoriesModule,
     TagsModule,
     ListingsModule,

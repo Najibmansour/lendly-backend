@@ -42,7 +42,7 @@ export class UploadController {
       dto.extension,
       dto.folder,
     );
-   
+
     return result;
   }
 }

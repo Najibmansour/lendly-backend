@@ -13,14 +13,14 @@ const ALLOWED_EXTENSIONS: Record<FileType, Set<string>> = {
 
 // Magic byte signatures for file type validation
 const MAGIC_BYTES: Record<string, Buffer[]> = {
-  jpg: [Buffer.from([0xFF, 0xD8, 0xFF])],
-  jpeg: [Buffer.from([0xFF, 0xD8, 0xFF])],
-  png: [Buffer.from([0x89, 0x50, 0x4E, 0x47])],
+  jpg: [Buffer.from([0xff, 0xd8, 0xff])],
+  jpeg: [Buffer.from([0xff, 0xd8, 0xff])],
+  png: [Buffer.from([0x89, 0x50, 0x4e, 0x47])],
   gif: [Buffer.from([0x47, 0x49, 0x46, 0x38])],
   webp: [Buffer.from([0x52, 0x49, 0x46, 0x46])], // RIFF header
   pdf: [Buffer.from([0x25, 0x50, 0x44, 0x46])], // %PDF
   mp4: [Buffer.from([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70])],
-  webm: [Buffer.from([0x1A, 0x45, 0xDF, 0xA3])],
+  webm: [Buffer.from([0x1a, 0x45, 0xdf, 0xa3])],
   mov: [Buffer.from([0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70])],
 };
 
@@ -63,7 +63,9 @@ export class UploadService {
   ): Promise<{ signedUrl: string; publicUrl: string; key: string }> {
     try {
       // 1. Validate extension against whitelist
-      const ext = (extension ?? this.getDefaultExtension(fileType)).toLowerCase();
+      const ext = (
+        extension ?? this.getDefaultExtension(fileType)
+      ).toLowerCase();
       if (!ALLOWED_EXTENSIONS[fileType].has(ext)) {
         throw new HttpException(
           `File extension .${ext} not allowed for ${fileType} uploads. Allowed: ${Array.from(ALLOWED_EXTENSIONS[fileType]).join(', ')}`,
@@ -71,19 +73,27 @@ export class UploadService {
         );
       }
 
-      // 2. Generate unique filename
+      // 2. Validate folder path to prevent directory traversal
+      if (folder && !this.isValidFolderPath(folder)) {
+        throw new HttpException(
+          'Invalid folder path. Only alphanumeric, dashes, and underscores allowed.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // 3. Generate unique filename
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substring(2, 15);
       const finalExt = `.${ext}`;
 
-      // 3. Build the S3 key
+      // 4. Build the S3 key
       const folderPath = folder ? `${folder}/` : `${fileType}/`;
       const key = `${folderPath}${timestamp}-${randomId}${finalExt}`;
 
-      // 4. Determine content type based on file type (not extension)
+      // 5. Determine content type based on file type (not extension)
       const contentType = this.getContentType(fileType, ext);
 
-      // 5. Create the PutObject command
+      // 6. Create the PutObject command
       const command = new PutObjectCommand({
         Bucket: this.bucketName,
         Key: key,
@@ -95,16 +105,16 @@ export class UploadService {
         },
       });
 
-      // 6. Generate presigned URL (expires in 5 minutes)
+      // 7. Generate presigned URL (expires in 5 minutes)
       const signedUrl = await getSignedUrl(this.s3Client, command, {
         expiresIn: 300,
       });
 
-      // 7. Build public URL
+      // 8. Build public URL
       const publicUrl = this.publicUrlBase
         ? `${this.publicUrlBase}/${key}`
         : `https://${this.bucketName}.${this.publicUrlBase}/${key}`;
-      
+
       return { signedUrl, publicUrl, key };
     } catch (error: any) {
       const message = error?.message || 'Unknown error generating upload URL';
@@ -134,10 +144,10 @@ export class UploadService {
   validateFileMagicBytes(buffer: Buffer, extension: string): boolean {
     const ext = extension.toLowerCase();
     const signatures = MAGIC_BYTES[ext];
-    
+
     if (!signatures) return false;
-    
-    return signatures.some(sig => buffer.subarray(0, sig.length).equals(sig));
+
+    return signatures.some((sig) => buffer.subarray(0, sig.length).equals(sig));
   }
 
   private getDefaultExtension(fileType: FileType): string {
@@ -165,5 +175,11 @@ export class UploadService {
       default:
         return 'application/octet-stream';
     }
+  }
+
+  private isValidFolderPath(folder: string): boolean {
+    const valid = /^[a-zA-Z0-9._\/-]{1,100}$/.test(folder);
+    const hasDangerousPatterns = folder.includes('..') || folder.includes('\\');
+    return valid && !hasDangerousPatterns;
   }
 }
